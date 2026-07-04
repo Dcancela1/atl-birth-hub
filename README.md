@@ -112,16 +112,34 @@ Cost figures are illustrative planning estimates. Actual charges vary by insuran
 
 ## Deployment
 
-### Option A — Streamlit Community Cloud (fastest, free tier)
+### Streamlit Community Cloud (recommended)
 
-Best for a public MVP with no servers to manage.
+The repo is pre-configured for [share.streamlit.io](https://share.streamlit.io).
 
-1. Push the repo to GitHub (include `data/facilities.csv` — commit it after `python data_ingestion.py --refresh`).
-2. Go to [share.streamlit.io](https://share.streamlit.io) → **New app** → select repo, branch, `app.py`.
-3. Set **Main file path** to `app.py`.
-4. Deploy. Streamlit Cloud installs `requirements.txt` and serves HTTPS automatically.
+**1. Push to GitHub**
 
-Refresh facility data on a schedule (weekly) by re-running locally and pushing an updated `data/facilities.csv`, or add a GitHub Action to run `data_ingestion.py --refresh`.
+```bash
+cd atl-birth-hub
+# Create a new empty repo at github.com/new named "atl-birth-hub"
+git remote add origin https://github.com/YOUR_USERNAME/atl-birth-hub.git
+git push -u origin main
+```
+
+**2. Deploy on Streamlit Cloud**
+
+1. Sign in at [share.streamlit.io](https://share.streamlit.io) with GitHub
+2. Click **Create app** → **Yup, I have an app**
+3. Set:
+   - **Repository:** `YOUR_USERNAME/atl-birth-hub`
+   - **Branch:** `main`
+   - **Main file path:** `app.py`
+4. Click **Deploy** — first build takes ~2–3 minutes
+
+Your public URL will look like: `https://atl-birth-hub.streamlit.app`
+
+**3. Keep data fresh (optional)**
+
+A GitHub Action (`.github/workflows/refresh-data.yml`) can open weekly PRs with updated `data/facilities.csv`. Enable it by pushing to GitHub — no Streamlit secrets required.
 
 ### Option B — Docker (Railway, Render, Fly.io, AWS, GCP)
 
