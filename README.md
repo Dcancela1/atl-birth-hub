@@ -137,9 +137,16 @@ git push -u origin main
 
 Your public URL will look like: `https://atl-birth-hub.streamlit.app`
 
-**3. Keep data fresh (optional)**
+**3. Keep data fresh**
 
-A GitHub Action (`.github/workflows/refresh-data.yml`) can open weekly PRs with updated `data/facilities.csv`. Enable it by pushing to GitHub — no Streamlit secrets required.
+Re-run locally and push an updated CSV:
+
+```bash
+python data_ingestion.py --refresh
+git add data/facilities.csv
+git commit -m "chore: refresh facility data"
+git push
+```
 
 ### Option B — Docker (Railway, Render, Fly.io, AWS, GCP)
 
