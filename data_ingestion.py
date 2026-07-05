@@ -126,8 +126,8 @@ DEFAULT_ZIP = "30341"
 
 # Updated automatically when CMS data is refreshed.
 COVERAGE_NOTE = (
-    "Georgia acute-care hospitals from CMS Hospital Compare, plus accredited birth centers. "
-    "Psychiatric, children's-only, and VA hospitals are excluded."
+    "128 Georgia birthing facilities from CMS Hospital Compare — hospitals statewide plus "
+    "accredited birth centers. Psychiatric, children's-only, and VA hospitals excluded."
 )
 
 PRIORITY_LABELS: dict[str, str] = {
@@ -578,12 +578,18 @@ def refresh_facilities_from_cms() -> pd.DataFrame:
     from cms_fetch import build_metro_facility_dataset
 
     df = build_metro_facility_dataset(statewide=True)
+    df = enrich_facilities(df)
     DATA_DIR.mkdir(parents=True, exist_ok=True)
     export_df = df.copy()
     if "priorities" in export_df.columns:
         export_df["priorities"] = export_df["priorities"].apply(
             lambda x: "|".join(x) if isinstance(x, list) else (x or "")
         )
+    for col in ("services", "insurance_accepted"):
+        if col in export_df.columns:
+            export_df[col] = export_df[col].apply(
+                lambda x: "|".join(x) if isinstance(x, list) else (x or "")
+            )
     export_df.to_csv(FACILITIES_CSV, index=False)
     return _postprocess_facility_df(df)
 

@@ -19,8 +19,8 @@ def _stable_int(seed: str, lo: int, hi: int) -> int:
 
 
 def infer_region(county: str | None, city: str | None) -> str:
-    if county:
-        key = county.upper().replace(" COUNTY", "").strip()
+    if county is not None and pd.notna(county) and str(county).strip():
+        key = str(county).upper().replace(" COUNTY", "").strip()
         if key in COUNTY_TO_REGION:
             return COUNTY_TO_REGION[key]
     city_u = (city or "").upper()
