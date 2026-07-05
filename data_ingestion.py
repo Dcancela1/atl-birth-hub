@@ -383,6 +383,55 @@ LOCAL_RESOURCES: list[dict] = [
         "link": "https://www.cms.gov/hospital-price-transparency",
         "icon": "💰",
     },
+    {
+        "category": "Mental Health & Wellness",
+        "name": "Postpartum Support International — GA",
+        "description": "Warmline, support groups, and referrals for perinatal mood and anxiety disorders.",
+        "link": "https://www.postpartum.net/",
+        "icon": "💜",
+    },
+    {
+        "category": "Mental Health & Wellness",
+        "name": "Perinatal Mental Health Alliance of Georgia",
+        "description": "Therapist directory and resources for pregnancy and postpartum mental health.",
+        "link": "https://www.google.com/search?q=perinatal+mental+health+georgia",
+        "icon": "🌿",
+    },
+    {
+        "category": "Lactation & Feeding",
+        "name": "Peach Tree Lactation Consultants",
+        "description": "IBCLC-certified consultants offering home and virtual breastfeeding support.",
+        "link": "https://www.google.com/search?q=peach+tree+lactation+atlanta",
+        "icon": "💚",
+    },
+    {
+        "category": "Lactation & Feeding",
+        "name": "Mothers' Milk Bank of Georgia",
+        "description": "Donor milk program and breastfeeding resources for NICU and preemie families.",
+        "link": "https://www.mothersmilkbankgeorgia.org/",
+        "icon": "🍼",
+    },
+    {
+        "category": "Community & Advocacy",
+        "name": "Healthy Mothers, Healthy Babies Coalition of GA",
+        "description": "Advocacy, education, and resources for maternal and infant health equity statewide.",
+        "link": "https://www.hmhbga.org/",
+        "icon": "🌸",
+    },
+    {
+        "category": "Community & Advocacy",
+        "name": "Georgia WIC Program",
+        "description": "Nutrition support, breastfeeding help, and referrals for qualifying families.",
+        "link": "https://dph.georgia.gov/WIC",
+        "icon": "🍎",
+    },
+    {
+        "category": "Community & Advocacy",
+        "name": "Sista Midwife Productions",
+        "description": "Culturally congruent doula training and birth support for Black families in Georgia.",
+        "link": "https://www.sistamidwife.com/",
+        "icon": "✨",
+    },
 ]
 
 

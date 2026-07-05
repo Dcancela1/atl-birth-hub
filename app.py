@@ -18,6 +18,7 @@ from data_ingestion import (
     DEFAULT_ZIP,
     apply_filters,
     load_facilities,
+    load_resources,
 )
 from filters_config import (
     DEFAULT_FILTERS,
@@ -320,6 +321,43 @@ PREMIUM_CSS = """
         .quality-badge { align-self: flex-start; }
         .block-container { padding-left: 0.75rem; padding-right: 0.75rem; }
         .stTabs [data-baseweb="tab"] { padding: 0.55rem 0.75rem; font-size: 0.82rem; }
+    }
+
+    /* Resource cards */
+    .resource-card {
+        background: var(--white);
+        border: 1px solid var(--border);
+        border-radius: 18px;
+        padding: 1.35rem 1.4rem;
+        margin-bottom: 0.65rem;
+        height: 100%;
+        box-shadow: 0 4px 18px rgba(217, 114, 142, 0.06);
+        transition: transform 0.2s ease, box-shadow 0.2s ease;
+    }
+    .resource-card:hover {
+        transform: translateY(-2px);
+        box-shadow: var(--shadow);
+    }
+    .resource-icon { font-size: 1.6rem; margin-bottom: 0.45rem; }
+    .resource-cat {
+        font-size: 0.68rem; font-weight: 600; text-transform: uppercase;
+        letter-spacing: 0.08em; color: var(--sage-500);
+    }
+    .resource-name {
+        font-family: 'Fraunces', serif;
+        font-size: 1.05rem; font-weight: 600;
+        color: var(--text); margin: 0.35rem 0 0.4rem 0; line-height: 1.35;
+    }
+    .resource-desc {
+        font-size: 0.86rem; color: var(--muted);
+        line-height: 1.55; margin: 0;
+    }
+    .resource-section-title {
+        font-family: 'Fraunces', serif;
+        font-size: 1.1rem; color: var(--text);
+        margin: 1.5rem 0 0.85rem 0;
+        padding-bottom: 0.4rem;
+        border-bottom: 1px solid var(--border);
     }
 
     /* Spinner overlay feel */
@@ -631,6 +669,38 @@ def render_map_tab(df: pd.DataFrame) -> None:
         st_folium(m, width=None, height=480, returned_objects=[])
 
 
+def render_resources_tab() -> None:
+    st.caption(
+        "You don't have to figure this out alone — curated Georgia resources for every stage of your journey."
+    )
+
+    resources = load_resources()
+    for category in resources["category"].unique():
+        st.markdown(f'<p class="resource-section-title">{category}</p>', unsafe_allow_html=True)
+        cat_df = resources[resources["category"] == category]
+        cols = st.columns(2)
+        for idx, (_, resource) in enumerate(cat_df.iterrows()):
+            with cols[idx % 2]:
+                st.markdown(
+                    f"""
+                    <div class="resource-card">
+                        <div class="resource-icon">{resource['icon']}</div>
+                        <div class="resource-cat">{resource['category']}</div>
+                        <div class="resource-name">{resource['name']}</div>
+                        <p class="resource-desc">{resource['description']}</p>
+                    </div>
+                    """,
+                    unsafe_allow_html=True,
+                )
+                st.link_button("Visit resource →", resource["link"], use_container_width=True)
+
+    st.markdown(
+        '<p style="font-size:0.82rem;color:var(--muted);margin-top:1.5rem;text-align:center;">'
+        "Links open trusted external sites. Always confirm details directly with providers.</p>",
+        unsafe_allow_html=True,
+    )
+
+
 def render_saved_tab(all_df: pd.DataFrame) -> None:
     saved = all_df[all_df["facility_id"].isin(st.session_state.saved_ids)]
 
@@ -695,12 +765,16 @@ def main() -> None:
 
     filtered = apply_filters(all_facilities, filters, user_zip=zip_clean)
 
-    tab_search, tab_map, tab_saved = st.tabs(["Search", "Map", "Saved"])
+    tab_search, tab_map, tab_resources, tab_saved = st.tabs(
+        ["Search", "Map", "Resources", "Saved"]
+    )
 
     with tab_search:
         render_search_tab(filtered)
     with tab_map:
         render_map_tab(filtered)
+    with tab_resources:
+        render_resources_tab()
     with tab_saved:
         render_saved_tab(all_facilities)
 
