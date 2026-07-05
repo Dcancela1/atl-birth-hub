@@ -49,7 +49,7 @@ source .venv/bin/activate   # macOS/Linux
 ### 3. Install dependencies
 
 ```bash
-pip install -r requirements.txt
+pip install -r requirements-dev.txt
 ```
 
 ### 4. Refresh facility data from CMS (recommended)
@@ -112,7 +112,21 @@ Cost figures are illustrative planning estimates. Actual charges vary by insuran
 
 ## Deployment
 
-### Streamlit Community Cloud (recommended)
+### Render (if Streamlit Cloud gets stuck)
+
+1. Sign up at [render.com](https://render.com) → connect GitHub (`Dcancela1`)
+2. **New +** → **Web Service** → select `atl-birth-hub`
+3. Settings:
+   - **Language:** Python 3
+   - **Build Command:** `pip install -r requirements.txt`
+   - **Start Command:** `streamlit run app.py --server.port=$PORT --server.address=0.0.0.0 --server.headless=true --browser.gatherUsageStats=false`
+   - **Plan:** Free
+4. Click **Create Web Service** — first deploy takes ~5 min
+5. Your URL: `https://atl-birth-hub.onrender.com` (or similar)
+
+Free tier sleeps after 15 min idle — first visit may take ~30 sec to wake up.
+
+### Streamlit Community Cloud
 
 The repo is pre-configured for [share.streamlit.io](https://share.streamlit.io).
 
