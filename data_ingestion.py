@@ -14,6 +14,9 @@ from typing import Optional
 
 import pandas as pd
 
+from facility_enrichment import enrich_facilities
+from filters_config import DEFAULT_FILTERS
+
 # ---------------------------------------------------------------------------
 # Paths
 # ---------------------------------------------------------------------------
@@ -123,10 +126,8 @@ DEFAULT_ZIP = "30341"
 
 # Updated automatically when CMS data is refreshed.
 COVERAGE_NOTE = (
-    "Sourced from CMS Hospital Compare (Georgia acute-care hospitals within 60 miles of "
-    "downtown Atlanta), plus accredited birth centers. Psychiatric, children's-only, and "
-    "VA hospitals are excluded. Cost ranges remain illustrative until hospital price "
-    "files (MRFs) are parsed."
+    "Georgia acute-care hospitals from CMS Hospital Compare, plus accredited birth centers. "
+    "Psychiatric, children's-only, and VA hospitals are excluded."
 )
 
 PRIORITY_LABELS: dict[str, str] = {
@@ -489,7 +490,77 @@ def _postprocess_facility_df(df: pd.DataFrame) -> pd.DataFrame:
         df["priorities"] = df["priorities"].apply(
             lambda x: x.split("|") if isinstance(x, str) and x else []
         )
-    return df
+    return enrich_facilities(df)
+
+
+def apply_filters(df: pd.DataFrame, filters: dict, user_zip: str | None = None) -> pd.DataFrame:
+    """Apply sidebar filters to the facility dataframe."""
+    result = df.copy()
+
+    query = (filters.get("search_query") or "").strip().lower()
+    if query:
+        result = result[
+            result.apply(
+                lambda r: query in str(r["name"]).lower()
+                or query in str(r.get("location", "")).lower()
+                or query in str(r.get("region", "")).lower(),
+                axis=1,
+            )
+        ]
+
+    regions = filters.get("regions") or []
+    if regions:
+        result = result[result["region"].isin(regions)]
+
+    if filters.get("distance_mode") != "Statewide" and user_zip:
+        result = add_distance_column(result, user_zip)
+        max_dist = filters.get("max_distance", 60)
+        result = result[result["distance_miles"].isna() | (result["distance_miles"] <= max_dist)]
+
+    min_q = filters.get("min_quality_score", 0)
+    if min_q:
+        result = result[result["quality_score"] >= min_q]
+
+    for metric in filters.get("quality_metrics") or []:
+        if metric == "Birthing-Friendly Hospital":
+            result = result[result["birthing_friendly"] == True]  # noqa: E712
+        elif metric == "Low C-Section Rate (<28%)":
+            result = result[result["csection_rate"] < 0.28]
+        elif metric == "High CMS Star Rating (4+)":
+            stars = pd.to_numeric(result["cms_stars"], errors="coerce")
+            result = result[stars >= 4]
+        elif metric == "Level III NICU":
+            result = result[result["nicu_level"].astype(str).str.contains("Level III", na=False)]
+        elif metric == "Teaching / Academic Center":
+            result = result[result["teaching_hospital"] == True]  # noqa: E712
+
+    for svc in filters.get("services") or []:
+        result = result[result["services"].apply(lambda s: svc in (s if isinstance(s, list) else []))]
+
+    pmin = filters.get("price_min", 0)
+    pmax = filters.get("price_max", 999999)
+    result = result[
+        result["vaginal_cost"].isna()
+        | ((result["vaginal_cost"] >= pmin) & (result["vaginal_cost"] <= pmax))
+    ]
+
+    ins = filters.get("insurance") or []
+    if ins:
+        result = result[
+            result["insurance_accepted"].apply(
+                lambda accepted: any(i in (accepted if isinstance(accepted, list) else []) for i in ins)
+            )
+        ]
+
+    min_births = filters.get("min_births_per_year", 0)
+    if min_births:
+        result = result[result["births_per_year"] >= min_births]
+
+    min_years = filters.get("min_years_operation", 0)
+    if min_years:
+        result = result[result["years_in_operation"] >= min_years]
+
+    return result.reset_index(drop=True)
 
 
 def refresh_facilities_from_cms() -> pd.DataFrame:
@@ -506,7 +577,7 @@ def refresh_facilities_from_cms() -> pd.DataFrame:
     """
     from cms_fetch import build_metro_facility_dataset
 
-    df = build_metro_facility_dataset()
+    df = build_metro_facility_dataset(statewide=True)
     DATA_DIR.mkdir(parents=True, exist_ok=True)
     export_df = df.copy()
     if "priorities" in export_df.columns:

@@ -342,6 +342,7 @@ def normalize_cms_record(
         "location": city,
         "address": address,
         "zip_code": zip_code,
+        "county": record.get("countyparish", "").strip().title(),
         "latitude": lat,
         "longitude": lon,
         "distance_from_atlanta": round(distance_miles, 1),
@@ -378,8 +379,8 @@ def normalize_cms_record(
     }
 
 
-def build_metro_facility_dataset() -> pd.DataFrame:
-    """Fetch CMS GA hospitals, filter to 60-mile Atlanta metro, append birth centers."""
+def build_metro_facility_dataset(statewide: bool = True) -> pd.DataFrame:
+    """Fetch CMS GA hospitals; statewide by default, append birth centers."""
     hospitals = fetch_georgia_hospitals()
     cesarean_rates = fetch_cesarean_rates()
 
@@ -390,7 +391,7 @@ def build_metro_facility_dataset() -> pd.DataFrame:
         if lat is None:
             continue
         dist = haversine_miles(ATLANTA_CENTER[0], ATLANTA_CENTER[1], lat, lon)
-        if dist > METRO_RADIUS_MILES:
+        if not statewide and dist > METRO_RADIUS_MILES:
             continue
         normalized = normalize_cms_record(h, cesarean_rates, dist)
         if normalized:

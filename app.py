@@ -1,25 +1,32 @@
 """
-ATL Birth Hub — Metro Atlanta Birth Facility Explorer
-
-Tesla-inspired minimal UI with clear, upfront filters and honest coverage messaging.
+ATL Birth Hub — Georgia Birth Facility Explorer
+Soft pink & white design with sidebar filters, result cards, and Folium map.
 """
 
 from __future__ import annotations
 
-from datetime import datetime
+import copy
 
+import folium
 import pandas as pd
 import streamlit as st
+from folium.plugins import MarkerCluster
+from streamlit_folium import st_folium
 
 from data_ingestion import (
     COVERAGE_NOTE,
     DEFAULT_ZIP,
-    PRIORITY_LABELS,
-    PRIORITY_OPTIONS,
-    QUALITY_FILTER_OPTIONS,
+    add_distance_column,
+    apply_filters,
     load_facilities,
-    load_resources,
-    prepare_facility_data,
+)
+from filters_config import (
+    DEFAULT_FILTERS,
+    GEORGIA_REGIONS,
+    INSURANCE_OPTIONS,
+    QUALITY_METRIC_OPTIONS,
+    QUALITY_SCORE_OPTIONS,
+    SERVICE_OPTIONS,
 )
 
 # ---------------------------------------------------------------------------
@@ -27,689 +34,418 @@ from data_ingestion import (
 # ---------------------------------------------------------------------------
 st.set_page_config(
     page_title="ATL Birth Hub",
-    page_icon="🌿",
+    page_icon="🌸",
     layout="wide",
-    initial_sidebar_state="collapsed",
+    initial_sidebar_state="expanded",
 )
 
-# ---------------------------------------------------------------------------
-# Tesla-inspired CSS — minimal, high-contrast, generous whitespace
-# ---------------------------------------------------------------------------
-st.markdown(
-    """
-    <style>
-        @import url('https://fonts.googleapis.com/css2?family=Inter:wght@400;500;600;700&display=swap');
+PINK_CSS = """
+<style>
+    @import url('https://fonts.googleapis.com/css2?family=Nunito:wght@400;500;600;700&family=Playfair+Display:wght@600;700&display=swap');
 
-        :root {
-            --black: #171717;
-            --gray-900: #262626;
-            --gray-600: #525252;
-            --gray-400: #A3A3A3;
-            --gray-200: #E5E5E5;
-            --gray-100: #F5F5F5;
-            --white: #FFFFFF;
-            --accent: #5D9C8E;
-            --accent-soft: #E8F4F0;
-        }
+    :root {
+        --pink-50: #FFF5F7;
+        --pink-100: #FFE4EC;
+        --pink-200: #FECDD6;
+        --pink-300: #FDA4B8;
+        --pink-400: #FB7195;
+        --pink-500: #F43F68;
+        --blush: #F9E8EE;
+        --white: #FFFFFF;
+        --text: #4A3040;
+        --muted: #8B6B7A;
+        --border: #F3D4DF;
+    }
 
-        .stApp {
-            background: var(--white);
-            font-family: 'Inter', -apple-system, BlinkMacSystemFont, sans-serif;
-        }
+    .stApp { background: var(--pink-50); font-family: 'Nunito', sans-serif; }
+    #MainMenu, footer { visibility: hidden; }
 
-        #MainMenu, footer, header { visibility: hidden; }
+    .block-container { padding-top: 4.5rem; max-width: 1200px; }
 
-        /* Hide sidebar — filters live in main panel */
-        section[data-testid="stSidebar"] { display: none; }
-        [data-testid="collapsedControl"] { display: none; }
+    /* Top bar */
+    .top-bar {
+        position: fixed; top: 0; left: 0; right: 0; z-index: 999;
+        background: var(--white); border-bottom: 1px solid var(--border);
+        padding: 0.65rem 1.5rem; display: flex; align-items: center; gap: 1rem;
+        box-shadow: 0 2px 16px rgba(244,63,104,0.06);
+    }
+    .top-logo { font-size: 1.5rem; }
+    .top-title {
+        font-family: 'Playfair Display', serif; font-size: 1.15rem;
+        font-weight: 700; color: var(--pink-500); white-space: nowrap;
+    }
+    .top-sub { font-size: 0.72rem; color: var(--muted); }
+    .top-right { margin-left: auto; display: flex; gap: 0.75rem; align-items: center; }
+    .top-pill {
+        background: var(--pink-100); color: var(--pink-500);
+        padding: 0.35rem 0.85rem; border-radius: 100px;
+        font-size: 0.8rem; font-weight: 600;
+    }
 
-        .block-container {
-            padding-top: 2rem;
-            max-width: 1100px;
-        }
+    /* Sidebar */
+    section[data-testid="stSidebar"] {
+        background: var(--white) !important;
+        border-right: 1px solid var(--border) !important;
+    }
+    section[data-testid="stSidebar"] .stMarkdown h3 {
+        color: var(--pink-500) !important;
+        font-family: 'Playfair Display', serif !important;
+        font-size: 0.95rem !important;
+        margin-top: 1rem !important;
+    }
 
-        /* Typography */
-        .main h1, .main h2, .main h3,
-        [data-testid="stAppViewContainer"] h1,
-        [data-testid="stAppViewContainer"] h2,
-        [data-testid="stAppViewContainer"] h3,
-        [data-testid="stMarkdownContainer"] h1,
-        [data-testid="stMarkdownContainer"] h2,
-        [data-testid="stMarkdownContainer"] h3,
-        .stTabs [data-baseweb="tab-panel"] h1,
-        .stTabs [data-baseweb="tab-panel"] h2,
-        .stTabs [data-baseweb="tab-panel"] h3 {
-            color: var(--black) !important;
-            font-family: 'Inter', sans-serif !important;
-            font-weight: 600 !important;
-            letter-spacing: -0.02em;
-        }
+    /* Headings */
+    h1, h2, h3, [data-testid="stMarkdownContainer"] h1,
+    [data-testid="stMarkdownContainer"] h2, [data-testid="stMarkdownContainer"] h3 {
+        color: var(--text) !important;
+        font-family: 'Playfair Display', serif !important;
+    }
 
-        [data-testid="stMetricLabel"] { color: var(--gray-600) !important; font-size: 0.75rem !important; text-transform: uppercase; letter-spacing: 0.06em; }
-        [data-testid="stMetricValue"] { color: var(--black) !important; font-weight: 600 !important; }
+    /* Tabs */
+    .stTabs [data-baseweb="tab-list"] { gap: 0.25rem; border-bottom: 1px solid var(--border); }
+    .stTabs [data-baseweb="tab"] {
+        background: transparent !important; color: var(--muted) !important;
+        font-weight: 600; border-radius: 8px 8px 0 0; padding: 0.6rem 1.2rem;
+    }
+    .stTabs [aria-selected="true"] {
+        color: var(--pink-500) !important;
+        border-bottom: 2px solid var(--pink-400) !important;
+        background: var(--pink-50) !important;
+    }
 
-        /* Hero — Tesla-style minimal */
-        .tesla-hero {
-            padding: 0 0 2.5rem 0;
-            border-bottom: 1px solid var(--gray-200);
-            margin-bottom: 2rem;
-        }
-        .tesla-hero h1 {
-            font-size: 2.5rem;
-            font-weight: 700;
-            color: var(--black);
-            margin: 0 0 0.5rem 0;
-            letter-spacing: -0.03em;
-        }
-        .tesla-hero .subtitle {
-            font-size: 1.05rem;
-            color: var(--gray-600);
-            margin: 0;
-            line-height: 1.5;
-            max-width: 560px;
-        }
-        .tesla-meta {
-            margin-top: 1rem;
-            font-size: 0.8rem;
-            color: var(--gray-400);
-            text-transform: uppercase;
-            letter-spacing: 0.08em;
-        }
+    /* Buttons */
+    .stButton > button[kind="primary"], .stButton > button {
+        background: var(--pink-400) !important; color: white !important;
+        border: none !important; border-radius: 8px !important; font-weight: 600 !important;
+    }
+    .stButton > button:hover { background: var(--pink-500) !important; }
 
-        /* Coverage banner */
-        .coverage-banner {
-            background: var(--gray-100);
-            border: 1px solid var(--gray-200);
-            border-radius: 4px;
-            padding: 1.25rem 1.5rem;
-            margin-bottom: 2rem;
-        }
-        .coverage-banner .title {
-            font-size: 0.7rem;
-            font-weight: 600;
-            text-transform: uppercase;
-            letter-spacing: 0.1em;
-            color: var(--gray-600);
-            margin-bottom: 0.5rem;
-        }
-        .coverage-banner .body {
-            font-size: 0.92rem;
-            color: var(--gray-900);
-            line-height: 1.55;
-            margin: 0;
-        }
-        .coverage-banner .count {
-            display: inline-block;
-            background: var(--black);
-            color: white;
-            padding: 0.15rem 0.5rem;
-            border-radius: 2px;
-            font-size: 0.8rem;
-            font-weight: 600;
-            margin-right: 0.35rem;
-        }
+    /* Result cards */
+    .result-card {
+        background: var(--white); border: 1px solid var(--border);
+        border-radius: 16px; padding: 1.35rem 1.5rem; margin-bottom: 1rem;
+        box-shadow: 0 4px 20px rgba(253,164,184,0.12);
+        transition: transform 0.15s ease;
+    }
+    .result-card:hover { transform: translateY(-2px); }
+    .card-name {
+        font-family: 'Playfair Display', serif; font-size: 1.2rem;
+        font-weight: 700; color: var(--text); margin: 0 0 0.2rem 0;
+    }
+    .card-meta { font-size: 0.85rem; color: var(--muted); margin-bottom: 0.75rem; }
+    .quality-badge {
+        display: inline-block; background: var(--pink-100); color: var(--pink-500);
+        padding: 0.2rem 0.65rem; border-radius: 100px;
+        font-size: 0.75rem; font-weight: 700;
+    }
+    .highlight-chip {
+        display: inline-block; background: var(--blush); color: var(--text);
+        padding: 0.2rem 0.55rem; border-radius: 6px;
+        font-size: 0.72rem; margin: 0.15rem 0.2rem 0.15rem 0;
+    }
+    .card-stat { font-size: 0.8rem; color: var(--muted); }
+    .card-stat strong { color: var(--text); }
 
-        /* Filter panel container */
-        [data-testid="stVerticalBlockBorderWrapper"] {
-            border-color: var(--gray-200) !important;
-            border-radius: 4px !important;
-            padding: 0.5rem 1rem 1rem 1rem !important;
-            margin-bottom: 2rem !important;
-        }
-        .filter-panel-title {
-            font-size: 0.7rem;
-            font-weight: 600;
-            text-transform: uppercase;
-            letter-spacing: 0.12em;
-            color: var(--gray-400);
-            margin-bottom: 1.5rem;
-        }
-        .filter-step-label {
-            font-size: 0.72rem;
-            font-weight: 600;
-            text-transform: uppercase;
-            letter-spacing: 0.08em;
-            color: var(--gray-600);
-            margin-bottom: 0.35rem;
-        }
-        .filter-step-hint {
-            font-size: 0.82rem;
-            color: var(--gray-400);
-            margin-top: 0.25rem;
-        }
+    .empty-state {
+        text-align: center; padding: 3rem; color: var(--muted);
+        background: var(--white); border-radius: 16px; border: 1px dashed var(--border);
+    }
 
-        /* Active filter chips */
-        .active-filters {
-            display: flex;
-            flex-wrap: wrap;
-            gap: 0.5rem;
-            margin-top: 1.25rem;
-            padding-top: 1.25rem;
-            border-top: 1px solid var(--gray-200);
-        }
-        .filter-chip {
-            background: var(--gray-100);
-            border: 1px solid var(--gray-200);
-            color: var(--gray-900);
-            padding: 0.35rem 0.75rem;
-            border-radius: 2px;
-            font-size: 0.78rem;
-            font-weight: 500;
-        }
-        .filter-chip strong {
-            color: var(--gray-400);
-            font-weight: 600;
-            margin-right: 0.25rem;
-        }
-
-        /* Tabs — underline style */
-        .stTabs [data-baseweb="tab-list"] {
-            gap: 0;
-            border-bottom: 1px solid var(--gray-200);
-            background: transparent;
-        }
-        .stTabs [data-baseweb="tab"] {
-            background: transparent !important;
-            border-radius: 0;
-            padding: 0.85rem 1.5rem;
-            font-weight: 500;
-            font-size: 0.9rem;
-            color: var(--gray-600) !important;
-            border-bottom: 2px solid transparent;
-        }
-        .stTabs [aria-selected="true"] {
-            color: var(--black) !important;
-            border-bottom: 2px solid var(--black) !important;
-            background: transparent !important;
-        }
-
-        /* Inputs */
-        .stTextInput input, .stSelectbox > div > div, .stMultiSelect > div > div {
-            border-radius: 2px !important;
-            border-color: var(--gray-200) !important;
-        }
-        .stSlider [data-baseweb="slider"] div { font-size: 0.85rem; }
-
-        /* Buttons */
-        .stButton > button {
-            background: var(--black) !important;
-            color: white !important;
-            border-radius: 2px !important;
-            border: none !important;
-            font-weight: 500 !important;
-            font-size: 0.85rem !important;
-            letter-spacing: 0.02em;
-            padding: 0.55rem 1.25rem !important;
-        }
-        .stButton > button:hover {
-            background: var(--gray-900) !important;
-        }
-        .stLinkButton > a {
-            border-radius: 2px !important;
-            border: 1px solid var(--gray-200) !important;
-            background: white !important;
-            color: var(--black) !important;
-            font-weight: 500 !important;
-        }
-
-        /* Cards */
-        .profile-card {
-            border: 1px solid var(--gray-200);
-            border-radius: 4px;
-            padding: 2rem;
-            margin: 1rem 0;
-        }
-        .profile-card h2 { margin-top: 0; font-size: 1.5rem; }
-        .stat-label {
-            font-size: 0.68rem;
-            text-transform: uppercase;
-            letter-spacing: 0.1em;
-            color: var(--gray-400);
-            margin-bottom: 0.25rem;
-        }
-        .stat-value { font-size: 1.35rem; font-weight: 600; color: var(--black); }
-        .stat-value.accent { color: var(--accent); }
-
-        .resource-card {
-            border: 1px solid var(--gray-200);
-            border-radius: 4px;
-            padding: 1.25rem;
-            margin-bottom: 0.5rem;
-            height: 100%;
-        }
-        .resource-cat {
-            font-size: 0.68rem;
-            text-transform: uppercase;
-            letter-spacing: 0.1em;
-            color: var(--gray-400);
-        }
-        .resource-name {
-            font-size: 1rem;
-            font-weight: 600;
-            color: var(--black);
-            margin: 0.4rem 0;
-        }
-        .resource-desc {
-            font-size: 0.88rem;
-            color: var(--gray-600);
-            line-height: 1.5;
-            margin: 0;
-        }
-
-        .map-placeholder {
-            border: 1px dashed var(--gray-200);
-            border-radius: 4px;
-            padding: 2.5rem;
-            text-align: center;
-            color: var(--gray-600);
-            margin-bottom: 1.5rem;
-        }
-
-        .disclaimer-line {
-            font-size: 0.8rem;
-            color: var(--gray-400);
-            line-height: 1.5;
-            border-top: 1px solid var(--gray-200);
-            padding-top: 1.5rem;
-            margin-top: 2rem;
-        }
-
-        .stDataFrame { border: 1px solid var(--gray-200); border-radius: 4px; }
-
-        /* Table filter sub-panel */
-        .table-filters-label {
-            font-size: 0.7rem;
-            font-weight: 600;
-            text-transform: uppercase;
-            letter-spacing: 0.1em;
-            color: var(--gray-400);
-            margin: 1.5rem 0 0.75rem 0;
-        }
-    </style>
-    """,
-    unsafe_allow_html=True,
-)
+    .coverage-note {
+        font-size: 0.8rem; color: var(--muted); line-height: 1.5;
+        background: var(--pink-50); border-radius: 8px; padding: 0.75rem 1rem;
+        border: 1px solid var(--border); margin-bottom: 1rem;
+    }
+</style>
+"""
+st.markdown(PINK_CSS, unsafe_allow_html=True)
 
 
-# ---------------------------------------------------------------------------
-# Helpers
-# ---------------------------------------------------------------------------
-def format_distance(value) -> str:
-    if value is None or (isinstance(value, float) and pd.isna(value)):
-        return "—"
-    return f"{value:.0f}"
+def init_state() -> None:
+    if "applied_filters" not in st.session_state:
+        st.session_state.applied_filters = copy.deepcopy(DEFAULT_FILTERS)
+    if "saved_ids" not in st.session_state:
+        st.session_state.saved_ids = set()
+    if "search_query" not in st.session_state:
+        st.session_state.search_query = ""
 
 
-def get_consideration_message(row: pd.Series) -> tuple[str, str]:
-    if row.get("birth_center"):
-        return (
-            "Best suited for low-risk pregnancies seeking midwifery-led, low-intervention care. "
-            "Hospital transfer is part of the safety plan if needed.",
-            "success",
-        )
-    if row.get("high_risk") or "complex" in str(row.get("key_strength", "")).lower():
-        return (
-            "Strong choice for higher-risk pregnancies. Ask about maternal-fetal medicine during your tour.",
-            "info",
-        )
-    return (
-        "Well-rounded option for most births. Schedule a tour to see if it feels right.",
-        "info",
-    )
-
-
-def render_hero() -> None:
+def render_top_bar(saved_count: int) -> None:
     st.markdown(
         f"""
-        <div class="tesla-hero">
-            <h1>ATL Birth Hub</h1>
-            <p class="subtitle">Compare birthing hospitals and birth centers across Metro Atlanta — costs, quality, and distance from home.</p>
-            <p class="tesla-meta">Updated {datetime.now().strftime('%b %d, %Y')} · 60-mile radius</p>
+        <div class="top-bar">
+            <span class="top-logo">🌸</span>
+            <div>
+                <div class="top-title">ATL Birth Hub</div>
+                <div class="top-sub">Find your birth space in Georgia</div>
+            </div>
+            <div class="top-right">
+                <span class="top-pill">♥ Saved ({saved_count})</span>
+                <span class="top-pill">Profile</span>
+            </div>
         </div>
         """,
         unsafe_allow_html=True,
     )
 
 
-def render_coverage_notice(
-    db_total: int,
-    in_radius: int,
-    db_hospitals: int,
-    radius_hospitals: int,
-) -> None:
-    birth_centers = db_total - db_hospitals
-    st.markdown(
-        f"""
-        <div class="coverage-banner">
-            <div class="title">Coverage</div>
-            <p class="body">
-                <span class="count">{in_radius} showing</span>
-                from <strong>{db_total} facilities</strong> in our database
-                ({db_hospitals} hospitals, {birth_centers} birth center(s) within 60 mi of Atlanta).
-                Your filter: {radius_hospitals} hospitals in current radius.
-                {COVERAGE_NOTE}
-            </p>
-        </div>
-        """,
-        unsafe_allow_html=True,
+def render_sidebar_filters() -> dict:
+    """Render filter UI; return draft filter dict (applied on button click)."""
+    st.sidebar.markdown("### Filters")
+    st.sidebar.caption("Set your preferences, then tap **Apply Filters**.")
+
+    draft = copy.deepcopy(st.session_state.applied_filters)
+
+    st.sidebar.markdown("#### 📍 Location")
+    draft["regions"] = st.sidebar.multiselect(
+        "Georgia regions",
+        GEORGIA_REGIONS,
+        default=st.session_state.applied_filters.get("regions", []),
+        placeholder="All regions (statewide)",
+    )
+    draft["distance_mode"] = st.sidebar.radio(
+        "Distance",
+        ["Statewide", "Near my ZIP"],
+        index=0 if st.session_state.applied_filters.get("distance_mode") == "Statewide" else 1,
+        horizontal=True,
+    )
+    if draft["distance_mode"] == "Near my ZIP":
+        draft["user_zip"] = st.sidebar.text_input("ZIP code", value=st.session_state.applied_filters.get("user_zip", DEFAULT_ZIP), max_chars=5)
+        draft["max_distance"] = st.sidebar.slider("Max miles", 10, 120, int(st.session_state.applied_filters.get("max_distance", 60)), step=5)
+    else:
+        draft["user_zip"] = st.session_state.applied_filters.get("user_zip", DEFAULT_ZIP)
+
+    st.sidebar.markdown("#### ⭐ Quality & Ratings")
+    score_label = st.sidebar.selectbox(
+        "Overall quality score",
+        list(QUALITY_SCORE_OPTIONS.keys()),
+        index=list(QUALITY_SCORE_OPTIONS.values()).index(st.session_state.applied_filters.get("min_quality_score", 0)),
+    )
+    draft["min_quality_score"] = QUALITY_SCORE_OPTIONS[score_label]
+    draft["quality_metrics"] = st.sidebar.multiselect(
+        "Quality metrics",
+        QUALITY_METRIC_OPTIONS,
+        default=st.session_state.applied_filters.get("quality_metrics", []),
     )
 
-
-def render_filter_panel() -> tuple[str, float, list[str]]:
-    """Main filter control panel — always visible, clearly labeled."""
-    st.markdown('<div class="filter-panel-title">Personalize your search</div>', unsafe_allow_html=True)
-
-    # Step 1: Location
-    col_zip, col_radius, col_results = st.columns([1, 2, 1])
-    with col_zip:
-        st.markdown('<div class="filter-step-label">① Your ZIP code</div>', unsafe_allow_html=True)
-        user_zip = st.text_input(
-            "ZIP",
-            value=DEFAULT_ZIP,
-            max_chars=5,
-            label_visibility="collapsed",
-            placeholder="30341",
-        )
-        st.markdown('<div class="filter-step-hint">Where you live</div>', unsafe_allow_html=True)
-
-    with col_radius:
-        st.markdown('<div class="filter-step-label">② Max drive distance</div>', unsafe_allow_html=True)
-        max_distance = st.slider(
-            "Miles",
-            min_value=10,
-            max_value=60,
-            value=40,
-            step=5,
-            label_visibility="collapsed",
-            format="%d mi",
-        )
-        st.markdown(
-            f'<div class="filter-step-hint">Showing facilities within <strong>{max_distance} miles</strong></div>',
-            unsafe_allow_html=True,
-        )
-
-    with col_results:
-        st.markdown('<div class="filter-step-label">③ Results</div>', unsafe_allow_html=True)
-        st.markdown(
-            '<div class="filter-step-hint" style="margin-top:0.5rem;">Updates as you adjust filters above</div>',
-            unsafe_allow_html=True,
-        )
-
-    # Step 2: Priorities
-    st.markdown('<div class="filter-step-label" style="margin-top:1.5rem;">④ What matters most</div>', unsafe_allow_html=True)
-    st.markdown(
-        '<div class="filter-step-hint">Select one or more — we\'ll rank facilities by how well they match</div>',
-        unsafe_allow_html=True,
+    st.sidebar.markdown("#### 💕 Services Offered")
+    draft["services"] = st.sidebar.multiselect(
+        "Services",
+        SERVICE_OPTIONS,
+        default=st.session_state.applied_filters.get("services", []),
+        placeholder="Any service",
     )
 
-    priority_cols = st.columns(3)
-    selected: list[str] = []
-    for i, priority in enumerate(PRIORITY_OPTIONS):
-        with priority_cols[i % 3]:
-            if st.checkbox(
-                priority,
-                value=priority in ["Lower costs", "Strong midwifery support"],
-                key=f"prio_{priority}",
-                help=PRIORITY_LABELS.get(priority, ""),
-            ):
-                selected.append(priority)
-
-    return user_zip, max_distance, selected
-
-
-def render_active_filters(
-    zip_code: str,
-    radius: float,
-    priorities: list[str],
-    result_count: int,
-) -> None:
-    chips = [
-        f"<span class='filter-chip'><strong>ZIP</strong> {zip_code}</span>",
-        f"<span class='filter-chip'><strong>Radius</strong> {radius:.0f} mi</span>",
-        f"<span class='filter-chip'><strong>Showing</strong> {result_count} facilities</span>",
-    ]
-    for p in priorities:
-        chips.append(f"<span class='filter-chip'><strong>Priority</strong> {p}</span>")
-    if not priorities:
-        chips.append("<span class='filter-chip'><strong>Priority</strong> None selected</span>")
-
-    st.markdown(
-        f'<div class="active-filters">{"".join(chips)}</div>',
-        unsafe_allow_html=True,
+    st.sidebar.markdown("#### 💳 Price & Insurance")
+    price = st.sidebar.slider(
+        "Vaginal delivery estimate ($)",
+        4000, 25000,
+        (
+            int(st.session_state.applied_filters.get("price_min", 4000)),
+            int(st.session_state.applied_filters.get("price_max", 25000)),
+        ),
+        step=500,
+    )
+    draft["price_min"], draft["price_max"] = price
+    draft["insurance"] = st.sidebar.multiselect(
+        "Insurance accepted",
+        INSURANCE_OPTIONS,
+        default=st.session_state.applied_filters.get("insurance", []),
+        placeholder="Any insurance",
     )
 
-
-def render_summary_metrics(df: pd.DataFrame, priorities: list[str]) -> None:
-    cols = st.columns(4)
-    avg = df["vaginal_cost"].dropna().mean()
-    avg_q = df["quality_rating"].dropna().mean()
-
-    with cols[0]:
-        st.metric("In your radius", len(df))
-    with cols[1]:
-        st.metric("Avg. vaginal cost", f"${avg:,.0f}" if pd.notna(avg) else "—")
-    with cols[2]:
-        st.metric("Avg. quality", f"{avg_q:.1f}/5" if pd.notna(avg_q) else "—")
-    with cols[3]:
-        if priorities:
-            st.metric("Best match", df.iloc[0]["name"].split()[0])
-        elif df["distance_miles"].notna().any():
-            st.metric("Nearest", df.loc[df["distance_miles"].idxmin()]["name"].split()[0])
-        else:
-            st.metric("Nearest", "—")
-
-
-def render_compare_tab(df: pd.DataFrame) -> None:
-    st.markdown("### Compare")
-    st.caption("Side-by-side view. All costs are facility estimates before insurance.")
-
-    st.markdown('<div class="table-filters-label">Refine this table</div>', unsafe_allow_html=True)
-    c1, c2, c3, c4 = st.columns([2, 2, 1.5, 1])
-    with c1:
-        search = st.text_input("Search", placeholder="Hospital name or city…", label_visibility="visible")
-    with c2:
-        available_ratings = sorted(
-            {q for q in df["quality_label"].dropna().unique()}
-            | set(QUALITY_FILTER_OPTIONS)
+    with st.sidebar.expander("Additional filters"):
+        draft["min_births_per_year"] = st.slider(
+            "Min. births per year",
+            0, 4000,
+            int(st.session_state.applied_filters.get("min_births_per_year", 0)),
+            step=100,
         )
-        rating_filter = st.multiselect(
-            "Quality level",
-            available_ratings,
-            default=available_ratings,
+        draft["min_years_operation"] = st.slider(
+            "Min. years in operation",
+            0, 80,
+            int(st.session_state.applied_filters.get("min_years_operation", 0)),
         )
-    with c3:
-        sort_by = st.selectbox(
-            "Sort by",
-            ["Match %", "Distance", "Cost", "Quality", "C-section rate"],
-        )
-    with c4:
-        st.markdown("<br>", unsafe_allow_html=True)
-        if st.button("Clear", use_container_width=True):
+
+    col_a, col_b = st.sidebar.columns(2)
+    with col_a:
+        if st.button("Apply Filters", type="primary", use_container_width=True):
+            st.session_state.applied_filters = draft
+            st.rerun()
+    with col_b:
+        if st.button("Reset All", use_container_width=True):
+            st.session_state.applied_filters = copy.deepcopy(DEFAULT_FILTERS)
+            st.session_state.search_query = ""
             st.rerun()
 
-    filtered = df.copy()
-    if search:
-        mask = filtered.apply(
-            lambda row: search.lower() in str(row["name"]).lower()
-            or search.lower() in str(row.get("location", "")).lower(),
-            axis=1,
-        )
-        filtered = filtered[mask]
-    if rating_filter:
-        filtered = filtered[filtered["quality_label"].isin(rating_filter)]
-
-    sort_map = {
-        "Match %": ("match_score", False),
-        "Distance": ("distance_miles", True),
-        "Cost": ("vaginal_cost", True),
-        "Quality": ("quality_rating", False),
-        "C-section rate": ("csection_rate", True),
-    }
-    col_name, ascending = sort_map[sort_by]
-    filtered = filtered.sort_values(col_name, ascending=ascending, na_position="last")
-
-    display = filtered.copy()
-    display["Distance"] = display["distance_miles"].apply(lambda x: f"{format_distance(x)} mi")
-    display["Match"] = display["match_score"].apply(lambda x: f"{x:.0f}%")
-
-    st.dataframe(
-        display[
-            [
-                "name", "location", "vaginal_cost_display", "csection_cost_display",
-                "quality_label", "csection_rate_display", "key_strength", "Distance", "Match",
-            ]
-        ].rename(columns={
-            "name": "Facility",
-            "location": "Area",
-            "vaginal_cost_display": "Vaginal est.",
-            "csection_cost_display": "C-section est.",
-            "quality_label": "Quality",
-            "csection_rate_display": "C-section rate",
-            "key_strength": "Strength",
-            "Match": "Match",
-        }),
-        use_container_width=True,
-        hide_index=True,
-        column_config={
-            "Vaginal est.": st.column_config.TextColumn(help="Facility charge range before insurance."),
-            "C-section est.": st.column_config.TextColumn(help="Facility charge range for cesarean delivery."),
-            "C-section rate": st.column_config.TextColumn(help="Low-risk C-section rate. Discuss with your provider."),
-            "Match": st.column_config.TextColumn(help="Alignment with your selected priorities."),
-        },
-    )
-
-    if filtered.empty:
-        st.info("No matches. Widen your radius or clear table filters.")
+    return draft
 
 
-def render_profiles_tab(df: pd.DataFrame) -> None:
-    st.markdown("### Profiles")
-    st.caption("Full detail on one facility at a time.")
+def render_result_card(row: pd.Series, show_save: bool = True) -> None:
+    fid = row["facility_id"]
+    saved = fid in st.session_state.saved_ids
+    dist = row.get("distance_miles")
+    dist_txt = f"{dist:.0f} mi away" if pd.notna(dist) else row.get("region", "Georgia")
 
-    selected = st.selectbox("Select facility", df["name"].tolist())
-    if not selected:
-        return
-
-    row = df[df["name"] == selected].iloc[0]
-    dist = format_distance(row.get("distance_miles"))
+    services = row.get("services", [])
+    if isinstance(services, str):
+        services = services.split("|") if services else []
+    chips = "".join(f'<span class="highlight-chip">{s}</span>' for s in services[:4])
 
     st.markdown(
         f"""
-        <div class="profile-card">
-            <h2>{selected}</h2>
-            <p style="color:#525252; margin-bottom:1.5rem;">{row['location']} · {dist} mi from your ZIP</p>
-            <div style="display:flex; gap:3rem; flex-wrap:wrap;">
-                <div><div class="stat-label">Vaginal</div><div class="stat-value accent">{row['vaginal_cost_display']}</div></div>
-                <div><div class="stat-label">C-section</div><div class="stat-value">{row['csection_cost_display']}</div></div>
-                <div><div class="stat-label">Match</div><div class="stat-value">{row['match_score']:.0f}%</div></div>
-                <div><div class="stat-label">Quality</div><div class="stat-value">{row['quality_label']}</div></div>
+        <div class="result-card">
+            <div style="display:flex;justify-content:space-between;align-items:start;">
+                <div>
+                    <p class="card-name">{row['name']}</p>
+                    <p class="card-meta">{row.get('location','')} · {row.get('region','')} · {dist_txt}</p>
+                </div>
+                <span class="quality-badge">{row.get('quality_score', 70)}% quality</span>
             </div>
-            <div style="margin-top:1.5rem; padding-top:1.5rem; border-top:1px solid #E5E5E5;">
-                <div class="stat-label">Strength</div>
-                <p style="color:#525252; margin:0.25rem 0 0 0;">{row['key_strength']} — {row['strengths']}</p>
+            <div style="margin:0.5rem 0;">{chips}</div>
+            <div class="card-stat">
+                <strong>Vaginal:</strong> {row.get('vaginal_cost_display','—')} &nbsp;·&nbsp;
+                <strong>C-section:</strong> {row.get('csection_cost_display','—')} &nbsp;·&nbsp;
+                <strong>{row.get('key_strength', row.get('quality_label',''))}</strong>
             </div>
         </div>
         """,
         unsafe_allow_html=True,
     )
-
-    message, alert_type = get_consideration_message(row)
-    (st.success if alert_type == "success" else st.info)(message)
-    st.markdown(f"**Consider:** {row['considerations']}")
-
-
-def render_map_tab(df: pd.DataFrame, user_zip: str) -> None:
-    st.markdown("### Map")
-    st.caption(f"Facilities within your radius of ZIP {user_zip}.")
-
-    st.markdown(
-        """
-        <div class="map-placeholder">
-            <p style="margin:0; font-weight:500; color:#171717;">Interactive map coming soon</p>
-            <p style="margin:0.5rem 0 0 0; font-size:0.88rem;">Drive times, clickable pins, and nearby resources.</p>
-        </div>
-        """,
-        unsafe_allow_html=True,
-    )
-
-    map_df = df[["latitude", "longitude"]].dropna()
-    if not map_df.empty:
-        st.map(map_df.rename(columns={"latitude": "lat", "longitude": "lon"}), zoom=9.5)
+    if show_save:
+        label = "♥ Saved" if saved else "♡ Save"
+        if st.button(label, key=f"save_{fid}"):
+            if saved:
+                st.session_state.saved_ids.discard(fid)
+            else:
+                st.session_state.saved_ids.add(fid)
+            st.rerun()
 
 
-def render_resources_tab() -> None:
-    st.markdown("### Resources")
-    st.caption("Local support beyond the hospital stay.")
-
-    resources = load_resources()
-    for category in resources["category"].unique():
-        st.markdown(f"**{category}**")
-        cat_df = resources[resources["category"] == category]
-        cols = st.columns(2)
-        for idx, (_, r) in enumerate(cat_df.iterrows()):
-            with cols[idx % 2]:
-                st.markdown(
-                    f"""
-                    <div class="resource-card">
-                        <div class="resource-cat">{r['category']}</div>
-                        <div class="resource-name">{r['name']}</div>
-                        <p class="resource-desc">{r['description']}</p>
-                    </div>
-                    """,
-                    unsafe_allow_html=True,
-                )
-                st.link_button("Open", r["link"], use_container_width=True)
-
-
-# ---------------------------------------------------------------------------
-# Main
-# ---------------------------------------------------------------------------
-def main() -> None:
-    render_hero()
-
-    full_df = load_facilities()
-    db_total = len(full_df)
-    db_hospitals = int((full_df["type"] == "Hospital").sum())
-
-    with st.container(border=True):
-        user_zip, max_distance, priorities = render_filter_panel()
-
-        zip_clean = str(user_zip).strip()[:5]
-        if not zip_clean.isdigit() or len(zip_clean) != 5:
-            st.warning("Enter a valid 5-digit ZIP code.")
-            zip_clean = DEFAULT_ZIP
-
-        df = prepare_facility_data(zip_clean, max_distance, priorities)
-        render_active_filters(zip_clean, max_distance, priorities, len(df))
-
-    radius_hospitals = int((df["type"] == "Hospital").sum()) if not df.empty else 0
-    render_coverage_notice(db_total, len(df), db_hospitals, radius_hospitals)
+def render_search_tab(df: pd.DataFrame) -> None:
+    st.markdown(f'<p class="coverage-note">{COVERAGE_NOTE}</p>', unsafe_allow_html=True)
+    st.caption(f"**{len(df)}** places match your filters")
 
     if df.empty:
-        st.warning("No facilities in this radius. Increase max drive distance above.")
+        st.markdown(
+            '<div class="empty-state"><p>No facilities match your filters.</p>'
+            '<p>Try <strong>Reset All</strong> or widen your search.</p></div>',
+            unsafe_allow_html=True,
+        )
         return
 
-    render_summary_metrics(df, priorities)
+    sort = st.selectbox("Sort by", ["Quality score", "Price (low)", "Distance", "Name"], label_visibility="collapsed")
+    sorted_df = df.copy()
+    if sort == "Quality score":
+        sorted_df = sorted_df.sort_values("quality_score", ascending=False)
+    elif sort == "Price (low)":
+        sorted_df = sorted_df.sort_values("vaginal_cost", ascending=True, na_position="last")
+    elif sort == "Distance":
+        sorted_df = sorted_df.sort_values("distance_miles", ascending=True, na_position="last")
+    else:
+        sorted_df = sorted_df.sort_values("name")
 
-    t1, t2, t3, t4 = st.tabs(["Compare", "Profiles", "Map", "Resources"])
+    for _, row in sorted_df.iterrows():
+        render_result_card(row)
 
-    with t1:
-        render_compare_tab(df)
-    with t2:
-        render_profiles_tab(df)
-    with t3:
-        render_map_tab(df, zip_clean)
-    with t4:
-        render_resources_tab()
 
-    st.markdown(
-        """
-        <p class="disclaimer-line">
-        Costs are illustrative ranges, not guaranteed prices. This is not medical or financial advice.
-        Always request a Good Faith Estimate and verify with your provider and hospital billing office.
-        </p>
-        """,
-        unsafe_allow_html=True,
+def render_map_tab(df: pd.DataFrame) -> None:
+    st.caption("Explore birthing facilities across Georgia. Click a pin for details.")
+
+    if df.empty:
+        st.info("Apply filters with at least one result to see the map.")
+        return
+
+    center_lat = df["latitude"].mean()
+    center_lon = df["longitude"].mean()
+    m = folium.Map(location=[center_lat, center_lon], zoom_start=7, tiles="CartoDB positron")
+
+    cluster = MarkerCluster(name="Facilities").add_to(m)
+    for _, row in df.iterrows():
+        if pd.isna(row.get("latitude")):
+            continue
+        popup = (
+            f"<b>{row['name']}</b><br>"
+            f"{row.get('region','')}<br>"
+            f"Quality: {row.get('quality_score',70)}%<br>"
+            f"{row.get('vaginal_cost_display','')}"
+        )
+        folium.Marker(
+            [row["latitude"], row["longitude"]],
+            popup=popup,
+            tooltip=row["name"],
+            icon=folium.Icon(color="lightred", icon="plus"),
+        ).add_to(cluster)
+
+    st_folium(m, width=None, height=500, returned_objects=[])
+
+
+def render_saved_tab(all_df: pd.DataFrame) -> None:
+    saved = all_df[all_df["facility_id"].isin(st.session_state.saved_ids)]
+    st.caption("Your saved places — perfect for comparing tours later.")
+
+    if saved.empty:
+        st.markdown(
+            '<div class="empty-state"><p>No saved places yet.</p>'
+            '<p>Tap <strong>♡ Save</strong> on any result card.</p></div>',
+            unsafe_allow_html=True,
+        )
+        return
+
+    for _, row in saved.iterrows():
+        render_result_card(row)
+
+
+def render_profile_panel() -> None:
+    with st.expander("Profile & preferences", expanded=False):
+        st.markdown("**Guest mode** — browsing without an account.")
+        st.caption("Future versions may add due-date reminders and saved birth plans.")
+        st.markdown(f"**Saved places:** {len(st.session_state.saved_ids)}")
+
+
+def main() -> None:
+    init_state()
+    all_facilities = load_facilities()
+
+    render_top_bar(len(st.session_state.saved_ids))
+    render_sidebar_filters()
+
+    # Central search bar (below fixed top bar)
+    st.session_state.search_query = st.text_input(
+        "Search",
+        value=st.session_state.search_query,
+        placeholder="Search hospitals, cities, or regions…",
+        label_visibility="collapsed",
+    )
+
+    filters = copy.deepcopy(st.session_state.applied_filters)
+    filters["search_query"] = st.session_state.search_query
+
+    user_zip = filters.get("user_zip", DEFAULT_ZIP)
+    if filters.get("distance_mode") == "Near my ZIP":
+        zip_clean = str(user_zip).strip()[:5]
+        if not zip_clean.isdigit() or len(zip_clean) != 5:
+            st.warning("Enter a valid 5-digit ZIP for distance filtering.")
+            zip_clean = DEFAULT_ZIP
+    else:
+        zip_clean = None
+
+    filtered = apply_filters(all_facilities, filters, user_zip=zip_clean)
+
+    render_profile_panel()
+
+    tab_search, tab_map, tab_saved = st.tabs(["🔍 Search", "🗺️ Map", "♥ Saved"])
+
+    with tab_search:
+        render_search_tab(filtered)
+    with tab_map:
+        render_map_tab(filtered)
+    with tab_saved:
+        render_saved_tab(all_facilities)
+
+    st.caption(
+        "Costs are illustrative estimates — not guaranteed prices. Not medical or financial advice. "
+        "Always request a Good Faith Estimate from your facility."
     )
 
 
