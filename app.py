@@ -389,9 +389,23 @@ def init_state() -> None:
     if "applied_filters" not in st.session_state:
         st.session_state.applied_filters = copy.deepcopy(DEFAULT_FILTERS)
     if "saved_ids" not in st.session_state:
-        st.session_state.saved_ids = set()
+        st.session_state.saved_ids = []
     if "search_query" not in st.session_state:
         st.session_state.search_query = ""
+
+
+def is_saved(facility_id: str) -> bool:
+    return facility_id in st.session_state.saved_ids
+
+
+def toggle_save(facility_id: str) -> None:
+    """Toggle saved state — reassign list so Streamlit persists the change."""
+    saved = list(st.session_state.saved_ids)
+    if facility_id in saved:
+        saved.remove(facility_id)
+    else:
+        saved.append(facility_id)
+    st.session_state.saved_ids = saved
 
 
 def quality_tier(score: int) -> tuple[str, str]:
@@ -546,9 +560,9 @@ def render_sidebar_filters() -> None:
             st.rerun()
 
 
-def render_result_card(row: pd.Series, show_save: bool = True) -> None:
-    fid = row["facility_id"]
-    saved = fid in st.session_state.saved_ids
+def render_result_card(row: pd.Series, show_save: bool = True, key_prefix: str = "search") -> None:
+    fid = str(row["facility_id"])
+    saved = is_saved(fid)
     score = int(row.get("quality_score", 70))
     tier, tier_label = quality_tier(score)
 
@@ -592,11 +606,13 @@ def render_result_card(row: pd.Series, show_save: bool = True) -> None:
         unsafe_allow_html=True,
     )
     if show_save:
-        if st.button("♥ Saved" if saved else "♡ Save to compare", key=f"save_{fid}", use_container_width=True):
-            if saved:
-                st.session_state.saved_ids.discard(fid)
-            else:
-                st.session_state.saved_ids.add(fid)
+        btn_key = f"save_btn_{key_prefix}_{fid}"
+        if st.button(
+            "♥ Saved" if saved else "♡ Save to compare",
+            key=btn_key,
+            use_container_width=True,
+        ):
+            toggle_save(fid)
             st.rerun()
 
 
@@ -632,7 +648,7 @@ def render_search_tab(df: pd.DataFrame) -> None:
         sorted_df = sorted_df.sort_values("name")
 
     for _, row in sorted_df.iterrows():
-        render_result_card(row)
+        render_result_card(row, key_prefix="search")
 
 
 def render_map_tab(df: pd.DataFrame) -> None:
@@ -714,7 +730,7 @@ def render_saved_tab(all_df: pd.DataFrame) -> None:
 
     st.caption(f"**{len(saved)}** saved — ready for tours and conversations with your partner.")
     for _, row in saved.iterrows():
-        render_result_card(row)
+        render_result_card(row, key_prefix="saved")
 
 
 def render_trust_footer() -> None:
@@ -742,7 +758,7 @@ def main() -> None:
     with st.spinner("Gathering trusted birth options for you…"):
         all_facilities = get_facilities()
 
-    render_hero(len(st.session_state.saved_ids), len(all_facilities))
+    render_hero(len(set(st.session_state.saved_ids)), len(all_facilities))
     render_about_section()
 
     st.markdown('<div class="search-strip"><div class="search-label">Search</div></div>', unsafe_allow_html=True)
