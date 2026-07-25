@@ -1,6 +1,6 @@
 """
-Atlanta Birth Hub — Full visual & UX overhaul for expecting mothers.
-Preserves all data, scores, costs, filters, map, resources, and save/compare.
+Atlanta Birth Hub — Aggressive maximum polish (Airbnb-clean, mother-soft).
+All data, filters, map, resources, and save/compare preserved.
 """
 
 from __future__ import annotations
@@ -37,94 +37,100 @@ st.set_page_config(
     initial_sidebar_state="expanded",
 )
 
-# ─────────────────────────────────────────────────────────────────────────────
-# Design system CSS — multi-layer shadows, guided filters, premium cards
-# ─────────────────────────────────────────────────────────────────────────────
+# ═══════════════════════════════════════════════════════════════════════════
+# AGGRESSIVE THEME — kill Streamlit defaults
+# ═══════════════════════════════════════════════════════════════════════════
 CSS = """
 <style>
-@import url('https://fonts.googleapis.com/css2?family=DM+Sans:ital,opsz,wght@0,9..40,400;0,9..40,500;0,9..40,600;0,9..40,700&family=Fraunces:opsz,wght@9..144,500;9..144,600;9..144,700&display=swap');
+@import url('https://fonts.googleapis.com/css2?family=Inter:wght@400;500;600;700&family=Fraunces:opsz,wght@9..144,500;9..144,600;9..144,700&display=swap');
 
 :root {
-    --bg: #FBF8F4;
+    --bg: #F9F6F2;
+    --bg-elevated: #FFFCFA;
     --white: #FFFFFF;
+    --blush: #D4A08F;
+    --blush-soft: #F7EDE8;
+    --blush-mid: #E8C9BC;
+    --blush-deep: #C48976;
     --sage: #7A9E8E;
-    --sage-soft: #EAF2EE;
-    --sage-mid: #C5D9CF;
+    --sage-soft: #EBF3EF;
+    --sage-mid: #C8DCD2;
     --sage-deep: #5A7D6E;
-    --terracotta: #C98B7B;
-    --terracotta-soft: #F6EDEA;
-    --terracotta-mid: #E5C4B8;
-    --terracotta-deep: #B57565;
-    --charcoal: #2C2C2C;
-    --gray: #6B6560;
-    --gray-soft: #8F8882;
-    --border: #EBE4DC;
-    --shadow-1: 0 1px 2px rgba(44,44,44,0.03);
-    --shadow-2: 0 4px 16px rgba(44,44,44,0.04);
-    --shadow-3: 0 12px 40px rgba(44,44,44,0.07);
-    --shadow-hover: 0 16px 48px rgba(44,44,44,0.1);
-    --excellent-bg: #E9F3EC;
-    --excellent-fg: #3A6B4F;
-    --strong-bg: #E9EFF5;
-    --strong-fg: #3A5A78;
-    --good-bg: #F7F0E6;
-    --good-fg: #8A6528;
-    --radius: 16px;
-    --radius-sm: 12px;
-    --radius-pill: 999px;
+    --ink: #2C2C2C;
+    --ink-soft: #5C5652;
+    --muted: #8A837C;
+    --line: #EBE5DD;
+    --line-soft: #F2EDE6;
+    --shadow-xs: 0 1px 2px rgba(44,44,44,0.04);
+    --shadow-sm: 0 2px 8px rgba(44,44,44,0.04), 0 1px 2px rgba(44,44,44,0.03);
+    --shadow-md: 0 8px 24px rgba(44,44,44,0.06), 0 2px 6px rgba(44,44,44,0.03);
+    --shadow-lg: 0 20px 50px rgba(44,44,44,0.08), 0 4px 12px rgba(44,44,44,0.04);
+    --r: 18px;
+    --r-sm: 14px;
+    --r-pill: 999px;
+    --excellent-bg: #E8F4EC;
+    --excellent-fg: #2F6B48;
+    --strong-bg: #EAF0F6;
+    --strong-fg: #355A7A;
+    --good-bg: #F8F1E6;
+    --good-fg: #8B6424;
 }
 
-html, body, [class*="css"] {
-    font-family: 'DM Sans', system-ui, -apple-system, sans-serif !important;
+/* ── Nuclear Streamlit reset ── */
+html, body, [class*="css"], .stApp, .stMarkdown, p, span, label, input, button, div {
+    font-family: 'Inter', system-ui, -apple-system, sans-serif !important;
 }
-
 .stApp {
     background: var(--bg) !important;
-    color: var(--charcoal);
+    color: var(--ink);
     font-size: 16.5px;
     line-height: 1.65;
 }
-
 #MainMenu, footer, header { visibility: hidden !important; height: 0 !important; }
-div[data-testid="stDecoration"] { display: none !important; }
-div[data-testid="stToolbar"] { display: none !important; }
+div[data-testid="stDecoration"],
+div[data-testid="stToolbar"],
+div[data-testid="stStatusWidget"] { display: none !important; }
+section.main > div { padding-top: 0 !important; }
 
 .block-container {
-    padding-top: 1.75rem !important;
-    padding-bottom: 4.5rem !important;
-    max-width: 1100px !important;
+    padding: 2rem 1.75rem 5rem !important;
+    max-width: 1080px !important;
 }
 
-/* Type */
-p, label, li, .stMarkdown, .stCaption { line-height: 1.65 !important; }
+/* Vertical rhythm between streamlit blocks */
+div[data-testid="stVerticalBlock"] > div {
+    gap: 0.35rem;
+}
+
+/* Headings */
 h1, h2, h3, h4,
 [data-testid="stMarkdownContainer"] h1,
 [data-testid="stMarkdownContainer"] h2,
 [data-testid="stMarkdownContainer"] h3 {
     font-family: 'Fraunces', Georgia, serif !important;
-    color: var(--charcoal) !important;
+    color: var(--ink) !important;
     font-weight: 600 !important;
-    letter-spacing: -0.022em;
-    line-height: 1.22 !important;
+    letter-spacing: -0.025em !important;
+    line-height: 1.2 !important;
 }
 
 /* ════════════ HEADER ════════════ */
 .abh-header {
     background: var(--white);
-    border: 1px solid var(--border);
-    border-radius: var(--radius);
-    padding: 1.65rem 2rem 1.4rem;
-    margin-bottom: 1.25rem;
-    box-shadow: var(--shadow-1), var(--shadow-2);
+    border: 1px solid var(--line);
+    border-radius: 20px;
+    padding: 1.85rem 2.15rem 1.6rem;
+    margin-bottom: 1.5rem;
+    box-shadow: var(--shadow-sm);
 }
 .abh-logo {
-    font-family: 'Fraunces', serif;
-    font-size: 1.6rem;
+    font-family: 'Fraunces', serif !important;
+    font-size: 1.7rem;
     font-weight: 700;
-    color: var(--charcoal);
+    color: var(--ink);
     margin: 0;
-    letter-spacing: -0.025em;
-    line-height: 1.15;
+    letter-spacing: -0.03em;
+    line-height: 1.1;
 }
 .abh-logo em {
     font-style: normal;
@@ -132,36 +138,35 @@ h1, h2, h3, h4,
     font-weight: 600;
 }
 .abh-tagline {
-    font-size: 0.95rem;
-    color: var(--gray);
-    margin: 0.4rem 0 0;
+    font-size: 1rem;
+    color: var(--ink-soft);
+    margin: 0.5rem 0 0;
     line-height: 1.5;
+    font-weight: 400;
 }
 .abh-trust {
     display: flex;
     flex-wrap: wrap;
-    gap: 0.5rem;
-    margin-top: 1.2rem;
-    padding-top: 1.1rem;
-    border-top: 1px solid var(--border);
+    gap: 0.55rem;
+    margin-top: 1.4rem;
+    padding-top: 1.25rem;
+    border-top: 1px solid var(--line-soft);
 }
 .abh-badge {
-    display: inline-flex;
-    align-items: center;
-    gap: 0.35rem;
-    font-size: 0.78rem;
-    font-weight: 550;
-    color: var(--gray);
+    font-size: 0.8rem;
+    font-weight: 500;
+    color: var(--ink-soft);
     background: var(--bg);
-    border: 1px solid var(--border);
-    padding: 0.38rem 0.9rem;
-    border-radius: var(--radius-pill);
+    border: 1px solid var(--line);
+    padding: 0.42rem 1rem;
+    border-radius: var(--r-pill);
     letter-spacing: 0.01em;
 }
 .abh-badge.accent {
     background: var(--sage-soft);
     color: var(--sage-deep);
     border-color: var(--sage-mid);
+    font-weight: 600;
 }
 
 /* ════════════ HERO ════════════ */
@@ -169,162 +174,211 @@ h1, h2, h3, h4,
     position: relative;
     overflow: hidden;
     background:
-        radial-gradient(ellipse 70% 90% at 95% 10%, rgba(122,158,142,0.16) 0%, transparent 55%),
-        radial-gradient(ellipse 50% 70% at 5% 90%, rgba(201,139,123,0.12) 0%, transparent 50%),
-        linear-gradient(165deg, #FFFFFF 0%, #F9F5F0 55%, #F3F0EA 100%);
-    border: 1px solid var(--border);
-    border-radius: 20px;
-    padding: 2.75rem 2.5rem 2.5rem;
-    margin-bottom: 1.5rem;
-    box-shadow: var(--shadow-1), var(--shadow-2);
+        radial-gradient(ellipse 65% 80% at 100% 0%, rgba(212,160,143,0.14) 0%, transparent 55%),
+        radial-gradient(ellipse 55% 70% at 0% 100%, rgba(122,158,142,0.12) 0%, transparent 50%),
+        linear-gradient(165deg, #FFFFFF 0%, #FBF8F4 100%);
+    border: 1px solid var(--line);
+    border-radius: 24px;
+    padding: 3.25rem 2.75rem 3rem;
+    margin-bottom: 2rem;
+    box-shadow: var(--shadow-md);
 }
 .abh-hero-kicker {
-    font-size: 0.74rem;
+    font-size: 0.75rem;
     font-weight: 600;
-    letter-spacing: 0.15em;
+    letter-spacing: 0.16em;
     text-transform: uppercase;
     color: var(--sage);
-    margin: 0 0 0.75rem;
+    margin: 0 0 0.9rem;
 }
 .abh-hero-title {
-    font-family: 'Fraunces', serif;
-    font-size: clamp(1.85rem, 4vw, 2.5rem);
+    font-family: 'Fraunces', serif !important;
+    font-size: clamp(2rem, 4.5vw, 2.75rem);
     font-weight: 700;
-    color: var(--charcoal);
-    margin: 0 0 0.85rem;
-    line-height: 1.15;
-    letter-spacing: -0.03em;
+    color: var(--ink);
+    margin: 0 0 1rem;
+    line-height: 1.12;
+    letter-spacing: -0.035em;
+    max-width: 14ch;
 }
 .abh-hero-value {
-    font-size: 1.1rem;
-    color: var(--gray);
-    line-height: 1.7;
-    max-width: 560px;
+    font-size: 1.12rem;
+    color: var(--ink-soft);
+    line-height: 1.75;
+    max-width: 34em;
     margin: 0;
+    font-weight: 400;
 }
 
-/* ════════════ SIDEBAR / FILTERS ════════════ */
+/* ════════════ SIDEBAR ════════════ */
 section[data-testid="stSidebar"] {
-    background: linear-gradient(180deg, #FFFFFF 0%, #FDFBFA 100%) !important;
-    border-right: 1px solid var(--border) !important;
+    background: var(--white) !important;
+    border-right: 1px solid var(--line) !important;
 }
 section[data-testid="stSidebar"] > div:first-child {
-    padding: 1.5rem 1.15rem 2rem !important;
+    padding: 1.75rem 1.25rem 3rem !important;
 }
 section[data-testid="stSidebar"] label {
     font-size: 0.88rem !important;
     font-weight: 550 !important;
-    color: var(--charcoal) !important;
+    color: var(--ink) !important;
+    letter-spacing: -0.01em !important;
 }
-section[data-testid="stSidebar"] .stCaption,
-section[data-testid="stSidebar"] [data-testid="stCaptionContainer"] {
-    color: var(--gray-soft) !important;
-    font-size: 0.8rem !important;
+section[data-testid="stSidebar"] [data-testid="stCaptionContainer"] p {
+    color: var(--muted) !important;
+    font-size: 0.82rem !important;
+    line-height: 1.5 !important;
+}
+section[data-testid="stSidebar"] hr {
+    border-color: var(--line-soft) !important;
+    margin: 1.25rem 0 !important;
 }
 
-.sb-head {
-    margin-bottom: 1.25rem;
-    padding-bottom: 1rem;
-    border-bottom: 1px solid var(--border);
-}
+.sb-head { margin-bottom: 1.5rem; }
 .sb-title {
-    font-family: 'Fraunces', serif;
-    font-size: 1.25rem;
+    font-family: 'Fraunces', serif !important;
+    font-size: 1.3rem;
     font-weight: 600;
-    color: var(--charcoal);
-    margin: 0 0 0.3rem;
+    color: var(--ink);
+    margin: 0 0 0.4rem;
+    letter-spacing: -0.02em;
 }
 .sb-sub {
-    font-size: 0.86rem;
-    color: var(--gray-soft);
+    font-size: 0.88rem;
+    color: var(--muted);
     margin: 0;
-    line-height: 1.5;
+    line-height: 1.55;
 }
 
 .chip-tray {
-    display: flex;
-    flex-wrap: wrap;
-    gap: 0.4rem;
-    margin-bottom: 1.1rem;
-    padding: 0.75rem;
     background: var(--bg);
-    border-radius: var(--radius-sm);
-    border: 1px solid var(--border);
+    border: 1px solid var(--line);
+    border-radius: var(--r-sm);
+    padding: 0.9rem 1rem;
+    margin-bottom: 1.35rem;
 }
 .chip-tray-label {
-    width: 100%;
     font-size: 0.7rem;
     font-weight: 600;
     text-transform: uppercase;
-    letter-spacing: 0.08em;
-    color: var(--gray-soft);
-    margin-bottom: 0.15rem;
+    letter-spacing: 0.1em;
+    color: var(--muted);
+    margin-bottom: 0.55rem;
 }
 .chip {
-    font-size: 0.74rem;
+    display: inline-block;
+    font-size: 0.76rem;
     font-weight: 500;
     background: var(--white);
     color: var(--sage-deep);
     border: 1px solid var(--sage-mid);
-    padding: 0.32rem 0.7rem;
-    border-radius: var(--radius-pill);
-    box-shadow: var(--shadow-1);
+    padding: 0.35rem 0.75rem;
+    border-radius: var(--r-pill);
+    margin: 0.15rem 0.2rem 0.15rem 0;
+    box-shadow: var(--shadow-xs);
 }
 
 .fg {
-    background: var(--white);
-    border: 1px solid var(--border);
-    border-radius: 14px;
-    padding: 1rem 1rem 0.85rem;
-    margin-bottom: 0.9rem;
-    box-shadow: var(--shadow-1);
+    background: var(--bg-elevated);
+    border: 1px solid var(--line);
+    border-radius: 16px;
+    padding: 1.15rem 1.1rem 1rem;
+    margin-bottom: 1.1rem;
+    box-shadow: var(--shadow-xs);
 }
 .fg-label {
-    font-family: 'Fraunces', serif;
-    font-size: 0.98rem;
+    font-family: 'Fraunces', serif !important;
+    font-size: 1.02rem;
     font-weight: 600;
-    color: var(--charcoal);
-    margin: 0 0 0.2rem;
+    color: var(--ink);
+    margin: 0 0 0.25rem;
 }
 .fg-help {
-    font-size: 0.8rem;
-    color: var(--gray-soft);
-    margin: 0 0 0.75rem;
-    line-height: 1.45;
+    font-size: 0.82rem;
+    color: var(--muted);
+    margin: 0 0 0.9rem;
+    line-height: 1.5;
 }
 
-/* Slider track & thumb */
-div[data-testid="stSlider"] > div > div > div[data-baseweb="slider"] div {
-    background-color: var(--terracotta) !important;
+/* Inputs */
+.stTextInput input,
+.stNumberInput input {
+    border-radius: 14px !important;
+    border: 1.5px solid var(--line) !important;
+    background: var(--white) !important;
+    padding: 0.85rem 1.1rem !important;
+    font-size: 0.95rem !important;
+    color: var(--ink) !important;
+    box-shadow: var(--shadow-xs) !important;
+}
+.stTextInput input:focus {
+    border-color: var(--blush) !important;
+    box-shadow: 0 0 0 3px rgba(212,160,143,0.18) !important;
+}
+.stSelectbox > div > div,
+.stMultiSelect > div > div {
+    border-radius: 14px !important;
+    border-color: var(--line) !important;
+    background: var(--white) !important;
+    box-shadow: var(--shadow-xs) !important;
+    min-height: 2.75rem !important;
+}
+
+/* Radio pills */
+div[role="radiogroup"] {
+    gap: 0.5rem !important;
+    flex-wrap: wrap !important;
+}
+div[role="radiogroup"] label {
+    background: var(--white) !important;
+    border: 1.5px solid var(--line) !important;
+    border-radius: var(--r-pill) !important;
+    padding: 0.45rem 1rem !important;
+    margin: 0 !important;
+}
+div[role="radiogroup"] label:has(input:checked) {
+    background: var(--sage-soft) !important;
+    border-color: var(--sage-mid) !important;
+}
+
+/* Sliders — blush accent */
+div[data-testid="stSlider"] > div > div > div {
+    background: var(--blush) !important;
 }
 div[data-testid="stSlider"] [role="slider"] {
-    background-color: var(--terracotta) !important;
-    border: 2.5px solid #fff !important;
-    box-shadow: 0 2px 8px rgba(201,139,123,0.35) !important;
+    background: var(--blush) !important;
+    border: 3px solid #fff !important;
+    box-shadow: 0 2px 10px rgba(212,160,143,0.4) !important;
+    width: 1.15rem !important;
+    height: 1.15rem !important;
 }
 
-/* Buttons */
-.stButton > button[kind="primary"] {
-    background: linear-gradient(180deg, #D49A8A 0%, var(--terracotta) 100%) !important;
-    color: #fff !important;
-    border: none !important;
-    border-radius: var(--radius-pill) !important;
+/* Buttons — pill, soft, expensive */
+.stButton > button {
+    border-radius: var(--r-pill) !important;
     font-weight: 600 !important;
     font-size: 0.92rem !important;
-    padding: 0.65rem 1.25rem !important;
-    box-shadow: 0 4px 14px rgba(201,139,123,0.32) !important;
+    padding: 0.7rem 1.35rem !important;
     letter-spacing: 0.01em !important;
+    transition: all 0.18s ease !important;
+    min-height: 2.85rem !important;
+}
+.stButton > button[kind="primary"] {
+    background: var(--blush) !important;
+    color: #fff !important;
+    border: none !important;
+    box-shadow: 0 4px 16px rgba(212,160,143,0.35) !important;
 }
 .stButton > button[kind="primary"]:hover {
-    background: var(--terracotta-deep) !important;
-    box-shadow: 0 6px 18px rgba(201,139,123,0.4) !important;
+    background: var(--blush-deep) !important;
+    transform: translateY(-1px);
+    box-shadow: 0 8px 22px rgba(212,160,143,0.4) !important;
 }
 .stButton > button:not([kind="primary"]) {
     background: var(--white) !important;
-    color: var(--charcoal) !important;
-    border: 1.5px solid var(--border) !important;
-    border-radius: var(--radius-pill) !important;
-    font-weight: 550 !important;
+    color: var(--ink) !important;
+    border: 1.5px solid var(--line) !important;
+    box-shadow: var(--shadow-xs) !important;
 }
 .stButton > button:not([kind="primary"]):hover {
     border-color: var(--sage) !important;
@@ -332,405 +386,430 @@ div[data-testid="stSlider"] [role="slider"] {
     color: var(--sage-deep) !important;
 }
 
-/* Text inputs */
-.stTextInput input {
-    border-radius: 14px !important;
-    border: 1.5px solid var(--border) !important;
+/* Link buttons (resources) */
+.stLinkButton > a {
+    border-radius: var(--r-pill) !important;
+    border: 1.5px solid var(--line) !important;
     background: var(--white) !important;
-    padding: 0.75rem 1rem !important;
-    font-size: 0.95rem !important;
-    color: var(--charcoal) !important;
+    color: var(--ink) !important;
+    font-weight: 550 !important;
+    padding: 0.65rem 1.2rem !important;
+    box-shadow: var(--shadow-xs) !important;
 }
-.stTextInput input:focus {
-    border-color: var(--sage) !important;
-    box-shadow: 0 0 0 3px rgba(122,158,142,0.15) !important;
-}
-.stSelectbox > div > div,
-.stMultiSelect > div > div {
-    border-radius: 12px !important;
-    border-color: var(--border) !important;
+.stLinkButton > a:hover {
+    border-color: var(--blush) !important;
+    background: var(--blush-soft) !important;
+    color: var(--blush-deep) !important;
 }
 
 /* Search shell */
 .search-shell {
     background: var(--white);
-    border: 1px solid var(--border);
-    border-radius: var(--radius);
-    padding: 1.1rem 1.25rem 0.35rem;
-    margin-bottom: 1.25rem;
-    box-shadow: var(--shadow-1), var(--shadow-2);
+    border: 1px solid var(--line);
+    border-radius: 20px;
+    padding: 1.25rem 1.4rem 0.5rem;
+    margin-bottom: 1.75rem;
+    box-shadow: var(--shadow-sm);
 }
 .search-label {
     font-size: 0.72rem;
     font-weight: 600;
-    letter-spacing: 0.1em;
+    letter-spacing: 0.12em;
     text-transform: uppercase;
-    color: var(--gray-soft);
+    color: var(--muted);
     margin: 0 0 0.15rem;
 }
 
-/* Tabs */
+/* Tabs — Airbnb-like segmented control */
 .stTabs [data-baseweb="tab-list"] {
-    gap: 0.2rem;
+    gap: 0.25rem;
     background: var(--white);
-    border: 1px solid var(--border);
-    border-radius: 14px;
-    padding: 0.4rem;
-    box-shadow: var(--shadow-1);
-    margin-bottom: 0.75rem;
+    border: 1px solid var(--line);
+    border-radius: 16px;
+    padding: 0.45rem;
+    box-shadow: var(--shadow-sm);
+    margin-bottom: 1.5rem !important;
 }
 .stTabs [data-baseweb="tab"] {
     background: transparent !important;
-    color: var(--gray) !important;
+    color: var(--muted) !important;
     font-weight: 600 !important;
-    font-size: 0.9rem !important;
-    padding: 0.7rem 1.25rem !important;
-    border-radius: 10px !important;
+    font-size: 0.92rem !important;
+    padding: 0.8rem 1.4rem !important;
+    border-radius: 12px !important;
 }
 .stTabs [aria-selected="true"] {
-    color: var(--charcoal) !important;
-    background: var(--sage-soft) !important;
-    box-shadow: var(--shadow-1) !important;
+    color: var(--ink) !important;
+    background: var(--bg) !important;
+    box-shadow: var(--shadow-xs) !important;
+}
+.stTabs [data-baseweb="tab-highlight"],
+.stTabs [data-baseweb="tab-border"] {
+    display: none !important;
 }
 
-/* ════════════ FACILITY CARDS ════════════ */
+/* ════════════ CARDS (Airbnb-inspired) ════════════ */
 .fc {
     background: var(--white);
-    border: 1px solid var(--border);
-    border-radius: var(--radius);
-    padding: 1.75rem 1.85rem;
-    margin-bottom: 1.25rem;
-    box-shadow: var(--shadow-1), var(--shadow-2);
+    border: 1px solid var(--line);
+    border-radius: 20px;
+    padding: 2rem 2rem 1.75rem;
+    margin-bottom: 1.75rem;
+    box-shadow: var(--shadow-md);
     transition: transform 0.22s ease, box-shadow 0.22s ease;
 }
 .fc:hover {
-    transform: translateY(-3px);
-    box-shadow: var(--shadow-hover);
+    transform: translateY(-4px);
+    box-shadow: var(--shadow-lg);
 }
 .fc-top {
     display: flex;
     justify-content: space-between;
     align-items: flex-start;
-    gap: 1.25rem;
+    gap: 1.5rem;
     flex-wrap: wrap;
 }
 .fc-name {
-    font-family: 'Fraunces', serif;
-    font-size: 1.38rem;
+    font-family: 'Fraunces', serif !important;
+    font-size: 1.45rem;
     font-weight: 600;
-    color: var(--charcoal);
-    margin: 0 0 0.35rem;
-    line-height: 1.25;
-    letter-spacing: -0.02em;
+    color: var(--ink);
+    margin: 0 0 0.4rem;
+    line-height: 1.22;
+    letter-spacing: -0.025em;
 }
 .fc-meta {
-    font-size: 0.92rem;
-    color: var(--gray);
-    margin: 0 0 0.55rem;
+    font-size: 0.95rem;
+    color: var(--ink-soft);
+    margin: 0 0 0.7rem;
+    font-weight: 400;
 }
 .fc-type {
     display: inline-block;
-    font-size: 0.7rem;
+    font-size: 0.72rem;
     font-weight: 600;
-    letter-spacing: 0.06em;
+    letter-spacing: 0.07em;
     text-transform: uppercase;
     color: var(--sage-deep);
     background: var(--sage-soft);
     border: 1px solid var(--sage-mid);
-    padding: 0.25rem 0.7rem;
-    border-radius: 8px;
+    padding: 0.3rem 0.8rem;
+    border-radius: 10px;
 }
 .fc-score {
     display: flex;
     flex-direction: column;
     align-items: center;
     justify-content: center;
-    min-width: 5.25rem;
-    padding: 0.8rem 1rem;
-    border-radius: 14px;
+    min-width: 5.5rem;
+    padding: 0.95rem 1.1rem;
+    border-radius: 16px;
     text-align: center;
     flex-shrink: 0;
 }
 .fc-score .n {
-    font-family: 'Fraunces', serif;
-    font-size: 1.85rem;
+    font-family: 'Fraunces', serif !important;
+    font-size: 2rem;
     font-weight: 700;
     line-height: 1;
+    letter-spacing: -0.03em;
 }
 .fc-score .l {
-    font-size: 0.68rem;
-    font-weight: 600;
-    text-transform: uppercase;
-    letter-spacing: 0.06em;
-    margin-top: 0.28rem;
-}
-.fc-score.excellent {
-    background: var(--excellent-bg);
-    color: var(--excellent-fg);
-    border: 1px solid #C4DFCE;
-}
-.fc-score.strong {
-    background: var(--strong-bg);
-    color: var(--strong-fg);
-    border: 1px solid #C5D5E6;
-}
-.fc-score.good {
-    background: var(--good-bg);
-    color: var(--good-fg);
-    border: 1px solid #E6D7BC;
-}
-.fc-tags {
-    display: flex;
-    flex-wrap: wrap;
-    gap: 0.4rem;
-    margin: 1.1rem 0 0.95rem;
-}
-.fc-tag {
-    font-size: 0.76rem;
-    font-weight: 500;
-    color: var(--charcoal);
-    background: var(--bg);
-    border: 1px solid var(--border);
-    padding: 0.32rem 0.72rem;
-    border-radius: 8px;
-}
-.fc-cost {
-    background: linear-gradient(135deg, var(--terracotta-soft) 0%, #FCFAF8 100%);
-    border: 1px solid var(--terracotta-mid);
-    border-radius: 14px;
-    padding: 1.05rem 1.2rem;
-    display: flex;
-    flex-wrap: wrap;
-    gap: 2rem;
-    margin-bottom: 0.75rem;
-}
-.fc-cost .ci strong {
-    display: block;
     font-size: 0.7rem;
     font-weight: 600;
     text-transform: uppercase;
     letter-spacing: 0.07em;
-    color: var(--gray-soft);
-    margin-bottom: 0.2rem;
+    margin-top: 0.35rem;
+}
+.fc-score.excellent {
+    background: var(--excellent-bg);
+    color: var(--excellent-fg);
+    border: 1px solid #C0DFCB;
+}
+.fc-score.strong {
+    background: var(--strong-bg);
+    color: var(--strong-fg);
+    border: 1px solid #C5D6E6;
+}
+.fc-score.good {
+    background: var(--good-bg);
+    color: var(--good-fg);
+    border: 1px solid #E8D8BC;
+}
+.fc-tags {
+    display: flex;
+    flex-wrap: wrap;
+    gap: 0.45rem;
+    margin: 1.35rem 0 1.15rem;
+}
+.fc-tag {
+    font-size: 0.8rem;
+    font-weight: 500;
+    color: var(--ink-soft);
+    background: var(--bg);
+    border: 1px solid var(--line);
+    padding: 0.38rem 0.8rem;
+    border-radius: 10px;
+}
+.fc-cost {
+    background: linear-gradient(145deg, var(--blush-soft) 0%, #FFFCFA 100%);
+    border: 1px solid var(--blush-mid);
+    border-radius: 16px;
+    padding: 1.2rem 1.35rem;
+    display: flex;
+    flex-wrap: wrap;
+    gap: 2.25rem;
+    margin-bottom: 0.9rem;
+}
+.fc-cost .ci strong {
+    display: block;
+    font-size: 0.72rem;
+    font-weight: 600;
+    text-transform: uppercase;
+    letter-spacing: 0.08em;
+    color: var(--muted);
+    margin-bottom: 0.25rem;
 }
 .fc-cost .ci span {
-    font-size: 1.15rem;
+    font-size: 1.2rem;
     font-weight: 600;
-    color: var(--charcoal);
-    letter-spacing: -0.015em;
+    color: var(--ink);
+    letter-spacing: -0.02em;
 }
 .fc-blurb {
-    font-size: 0.95rem;
-    color: var(--gray);
-    line-height: 1.55;
-    margin: 0.4rem 0 0;
+    font-size: 0.98rem;
+    color: var(--ink-soft);
+    line-height: 1.6;
+    margin: 0.5rem 0 0;
     font-style: italic;
 }
 
 /* Results header */
 .rh {
-    margin: 0.35rem 0 1.25rem;
-    padding-bottom: 1rem;
-    border-bottom: 1px solid var(--border);
+    margin: 0.25rem 0 1.75rem;
+    padding-bottom: 1.25rem;
+    border-bottom: 1px solid var(--line);
 }
 .rh-title {
-    font-family: 'Fraunces', serif;
-    font-size: 1.4rem;
+    font-family: 'Fraunces', serif !important;
+    font-size: 1.5rem;
     font-weight: 600;
-    color: var(--charcoal);
+    color: var(--ink);
     margin: 0;
-    letter-spacing: -0.02em;
+    letter-spacing: -0.025em;
 }
 .rh-title em {
     font-style: normal;
     color: var(--sage);
 }
 .rh-sub {
-    font-size: 0.9rem;
-    color: var(--gray-soft);
-    margin: 0.3rem 0 0;
+    font-size: 0.95rem;
+    color: var(--muted);
+    margin: 0.4rem 0 0;
 }
 
 /* Empty */
 .empty {
     text-align: center;
-    padding: 3.5rem 2rem;
+    padding: 4rem 2rem;
     background: var(--white);
-    border: 1.5px dashed var(--border);
-    border-radius: var(--radius);
-    margin: 1rem 0 1.75rem;
-    box-shadow: var(--shadow-1);
+    border: 1.5px dashed var(--line);
+    border-radius: 20px;
+    margin: 1.25rem 0 2rem;
+    box-shadow: var(--shadow-sm);
 }
-.empty-ico { font-size: 2.35rem; margin-bottom: 0.85rem; opacity: 0.9; }
+.empty-ico { font-size: 2.5rem; margin-bottom: 1rem; opacity: 0.85; }
 .empty-h {
-    font-family: 'Fraunces', serif;
-    font-size: 1.3rem;
-    color: var(--charcoal);
-    margin: 0 0 0.55rem;
+    font-family: 'Fraunces', serif !important;
+    font-size: 1.35rem;
+    color: var(--ink);
+    margin: 0 0 0.6rem;
 }
 .empty-p {
-    font-size: 0.98rem;
-    color: var(--gray);
-    max-width: 400px;
+    font-size: 1rem;
+    color: var(--ink-soft);
+    max-width: 380px;
     margin: 0 auto;
-    line-height: 1.65;
+    line-height: 1.7;
 }
 
 /* Gentle note */
 .gentle {
-    font-size: 0.9rem;
-    color: var(--gray);
-    line-height: 1.7;
+    font-size: 0.95rem;
+    color: var(--ink-soft);
+    line-height: 1.75;
     background: var(--white);
-    border: 1px solid var(--border);
+    border: 1px solid var(--line);
     border-left: 4px solid var(--sage);
-    border-radius: 0 14px 14px 0;
-    padding: 1.1rem 1.35rem;
-    margin: 0.9rem 0 1.4rem;
-    box-shadow: var(--shadow-1);
+    border-radius: 0 16px 16px 0;
+    padding: 1.25rem 1.5rem;
+    margin: 1.1rem 0 1.75rem;
+    box-shadow: var(--shadow-sm);
 }
 
 /* Map */
 .map-wrap {
     background: var(--white);
-    border: 1px solid var(--border);
-    border-radius: var(--radius);
-    padding: 1.25rem;
-    box-shadow: var(--shadow-1), var(--shadow-2);
-    margin-bottom: 1rem;
+    border: 1px solid var(--line);
+    border-radius: 20px;
+    padding: 1.5rem;
+    box-shadow: var(--shadow-md);
+    margin-bottom: 1.25rem;
 }
 .map-cap {
-    font-size: 0.92rem;
-    color: var(--gray);
-    margin: 0 0 1rem;
-    line-height: 1.55;
+    font-size: 0.98rem;
+    color: var(--ink-soft);
+    margin: 0 0 1.15rem;
+    line-height: 1.65;
 }
 
-/* Resources hub */
+/* Resources */
 .res-intro {
-    font-size: 1.05rem;
-    color: var(--gray);
-    line-height: 1.7;
-    margin: 0.25rem 0 1.75rem;
-    max-width: 520px;
+    font-size: 1.1rem;
+    color: var(--ink-soft);
+    line-height: 1.75;
+    margin: 0.25rem 0 2rem;
+    max-width: 36em;
 }
 .res-section {
-    font-family: 'Fraunces', serif;
-    font-size: 1.18rem;
-    color: var(--charcoal);
-    margin: 2rem 0 1.1rem;
-    padding-bottom: 0.55rem;
-    border-bottom: 1px solid var(--border);
-    letter-spacing: -0.015em;
+    font-family: 'Fraunces', serif !important;
+    font-size: 1.25rem;
+    color: var(--ink);
+    margin: 2.5rem 0 1.25rem;
+    padding-bottom: 0.65rem;
+    border-bottom: 1px solid var(--line);
+    letter-spacing: -0.02em;
 }
 .res-card {
     background: var(--white);
-    border: 1px solid var(--border);
-    border-radius: 14px;
-    padding: 1.5rem 1.5rem 1.35rem;
-    margin-bottom: 1rem;
-    min-height: 168px;
-    box-shadow: var(--shadow-1), var(--shadow-2);
+    border: 1px solid var(--line);
+    border-radius: 18px;
+    padding: 1.75rem 1.65rem 1.5rem;
+    margin-bottom: 1.15rem;
+    min-height: 180px;
+    box-shadow: var(--shadow-md);
     transition: transform 0.2s ease, box-shadow 0.2s ease;
 }
 .res-card:hover {
-    transform: translateY(-2px);
-    box-shadow: var(--shadow-hover);
+    transform: translateY(-3px);
+    box-shadow: var(--shadow-lg);
 }
-.res-ico { font-size: 1.55rem; margin-bottom: 0.55rem; }
+.res-ico { font-size: 1.65rem; margin-bottom: 0.65rem; }
 .res-cat {
-    font-size: 0.7rem;
+    font-size: 0.72rem;
     font-weight: 600;
-    letter-spacing: 0.09em;
+    letter-spacing: 0.1em;
     text-transform: uppercase;
     color: var(--sage);
 }
 .res-name {
-    font-family: 'Fraunces', serif;
-    font-size: 1.1rem;
+    font-family: 'Fraunces', serif !important;
+    font-size: 1.15rem;
     font-weight: 600;
-    color: var(--charcoal);
-    margin: 0.4rem 0 0.5rem;
+    color: var(--ink);
+    margin: 0.45rem 0 0.55rem;
     line-height: 1.3;
+    letter-spacing: -0.015em;
 }
 .res-desc {
-    font-size: 0.9rem;
-    color: var(--gray);
-    line-height: 1.6;
+    font-size: 0.95rem;
+    color: var(--ink-soft);
+    line-height: 1.65;
     margin: 0;
 }
 
 /* Footer */
 .abh-foot {
-    margin-top: 3.25rem;
-    padding: 2.5rem 1rem 1.5rem;
-    border-top: 1px solid var(--border);
+    margin-top: 4rem;
+    padding: 3rem 1rem 2rem;
+    border-top: 1px solid var(--line);
     text-align: center;
 }
 .abh-foot .brand {
-    font-family: 'Fraunces', serif;
-    font-size: 1.08rem;
-    color: var(--charcoal);
-    margin-bottom: 0.55rem;
+    font-family: 'Fraunces', serif !important;
+    font-size: 1.15rem;
+    color: var(--ink);
+    margin-bottom: 0.65rem;
 }
 .abh-foot p {
-    font-size: 0.84rem;
-    color: var(--gray-soft);
-    line-height: 1.7;
-    max-width: 600px;
-    margin: 0.35rem auto;
+    font-size: 0.88rem;
+    color: var(--muted);
+    line-height: 1.75;
+    max-width: 560px;
+    margin: 0.4rem auto;
 }
 .foot-pills {
     display: flex;
     justify-content: center;
     flex-wrap: wrap;
-    gap: 0.5rem;
-    margin-top: 1.25rem;
+    gap: 0.55rem;
+    margin-top: 1.5rem;
 }
 .foot-pill {
-    font-size: 0.74rem;
+    font-size: 0.76rem;
     font-weight: 500;
     color: var(--sage-deep);
     background: var(--sage-soft);
     border: 1px solid var(--sage-mid);
-    padding: 0.38rem 0.85rem;
-    border-radius: var(--radius-pill);
+    padding: 0.42rem 0.95rem;
+    border-radius: var(--r-pill);
 }
 
 /* Expanders */
 div[data-testid="stExpander"] {
     background: var(--white) !important;
-    border: 1px solid var(--border) !important;
-    border-radius: 14px !important;
-    box-shadow: var(--shadow-1) !important;
-    margin-bottom: 0.85rem !important;
+    border: 1px solid var(--line) !important;
+    border-radius: 16px !important;
+    box-shadow: var(--shadow-sm) !important;
+    margin-bottom: 1rem !important;
 }
-div[data-testid="stExpander"] details summary p {
+div[data-testid="stExpander"] details {
+    border: none !important;
+}
+div[data-testid="stExpander"] summary {
+    padding: 0.85rem 0.5rem !important;
+}
+div[data-testid="stExpander"] summary p {
     font-weight: 550 !important;
-    color: var(--charcoal) !important;
+    color: var(--ink) !important;
+    font-size: 0.98rem !important;
 }
 
-.stSpinner > div { border-top-color: var(--sage) !important; }
+/* Alerts soft */
+div[data-testid="stAlert"] {
+    border-radius: 14px !important;
+    border: 1px solid var(--line) !important;
+}
+
+.stSpinner > div { border-top-color: var(--blush) !important; }
+
+/* Sidebar gap breathing room */
+section[data-testid="stSidebar"] .stMarkdown {
+    margin-bottom: 0.15rem;
+}
+section[data-testid="stSidebar"] .stButton {
+    margin-top: 0.35rem;
+}
 
 @media (max-width: 768px) {
-    .abh-hero { padding: 1.75rem 1.35rem; }
-    .abh-hero-title { font-size: 1.7rem; }
-    .abh-header { padding: 1.2rem 1.25rem; }
-    .fc { padding: 1.3rem 1.25rem; }
-    .fc-name { font-size: 1.15rem; }
-    .fc-top { flex-direction: column; }
+    .abh-hero { padding: 2rem 1.4rem; border-radius: 18px; }
+    .abh-hero-title { font-size: 1.75rem; max-width: none; }
+    .abh-header { padding: 1.35rem 1.3rem; }
+    .fc { padding: 1.4rem 1.3rem; margin-bottom: 1.35rem; border-radius: 16px; }
+    .fc-name { font-size: 1.2rem; }
+    .fc-top { flex-direction: column; gap: 1rem; }
     .fc-score {
         flex-direction: row;
         gap: 0.5rem;
         align-self: flex-start;
         min-width: auto;
-        padding: 0.55rem 0.9rem;
+        padding: 0.6rem 1rem;
     }
-    .fc-score .n { font-size: 1.35rem; }
-    .fc-cost { gap: 1.1rem; }
-    .rh-title { font-size: 1.2rem; }
-    .stTabs [data-baseweb="tab"] { padding: 0.55rem 0.75rem !important; font-size: 0.8rem !important; }
-    .block-container { padding-left: 0.7rem !important; padding-right: 0.7rem !important; }
+    .fc-score .n { font-size: 1.4rem; }
+    .fc-cost { gap: 1.25rem; padding: 1rem 1.1rem; }
+    .rh-title { font-size: 1.25rem; }
+    .stTabs [data-baseweb="tab"] { padding: 0.6rem 0.85rem !important; font-size: 0.82rem !important; }
+    .block-container { padding: 1.25rem 0.85rem 3.5rem !important; }
 }
 </style>
 """
@@ -755,9 +834,6 @@ Tour when you can, confirm insurance, and lean on your provider. Your comfort ma
 """
 
 
-# ─────────────────────────────────────────────────────────────────────────────
-# State & helpers
-# ─────────────────────────────────────────────────────────────────────────────
 @st.cache_data(show_spinner=False)
 def get_facilities() -> pd.DataFrame:
     return load_facilities()
@@ -794,7 +870,6 @@ def quality_tier(score: int) -> tuple[str, str]:
 
 
 def chip_specs(filters: dict) -> list[dict[str, Any]]:
-    """Structured chips with remove actions."""
     chips: list[dict[str, Any]] = []
     for r in filters.get("regions") or []:
         chips.append({"label": r, "action": "region", "value": r})
@@ -844,9 +919,6 @@ def remove_chip(action: str, value: Any = None) -> None:
     st.session_state.applied_filters = f
 
 
-# ─────────────────────────────────────────────────────────────────────────────
-# UI sections
-# ─────────────────────────────────────────────────────────────────────────────
 def render_header(total: int, saved: int) -> None:
     st.markdown(
         f"""
@@ -917,7 +989,7 @@ def render_sidebar() -> None:
         """
         <div class="sb-head">
             <p class="sb-title">Narrow your search</p>
-            <p class="sb-sub">Choose what matters, then Apply. You can always reset.</p>
+            <p class="sb-sub">Choose what matters, then Apply. You can always start over.</p>
         </div>
         """,
         unsafe_allow_html=True,
@@ -926,24 +998,23 @@ def render_sidebar() -> None:
     applied = st.session_state.applied_filters
     draft = copy.deepcopy(applied)
 
-    # Removable active chips
     chips = chip_specs(applied)
     if chips:
+        labels = " ".join(f'<span class="chip">{c["label"]}</span>' for c in chips[:10])
         st.sidebar.markdown(
-            '<div class="chip-tray"><div class="chip-tray-label">Active filters</div></div>',
+            f'<div class="chip-tray"><div class="chip-tray-label">Active filters</div>{labels}</div>',
             unsafe_allow_html=True,
         )
-        # Show chips as HTML + remove buttons in a compact row
+        # Compact remove row
+        st.sidebar.caption("Remove a filter:")
+        cols = st.sidebar.columns(min(len(chips), 4))
         for i, chip in enumerate(chips[:8]):
-            c1, c2 = st.sidebar.columns([4, 1])
-            with c1:
-                st.markdown(f'<span class="chip">{chip["label"]}</span>', unsafe_allow_html=True)
-            with c2:
-                if st.button("×", key=f"rm_chip_{i}_{chip['action']}_{chip['value']}", help=f"Remove {chip['label']}"):
+            with cols[i % len(cols)]:
+                short = chip["label"][:14] + ("…" if len(chip["label"]) > 14 else "")
+                if st.button(f"× {short}", key=f"rm_{i}_{chip['action']}_{chip['value']}", use_container_width=True):
                     remove_chip(chip["action"], chip["value"])
                     st.rerun()
 
-    # Location
     st.sidebar.markdown(
         '<div class="fg"><p class="fg-label">Location</p>'
         '<p class="fg-help">Where would you like to give birth?</p></div>',
@@ -966,7 +1037,7 @@ def render_sidebar() -> None:
             "Your ZIP code",
             value=applied.get("user_zip", DEFAULT_ZIP),
             max_chars=5,
-            help="We estimate straight-line distance to each facility.",
+            help="Straight-line estimate to each facility.",
         )
         draft["max_distance"] = st.sidebar.slider(
             "Maximum drive (miles)",
@@ -977,10 +1048,9 @@ def render_sidebar() -> None:
     else:
         draft["user_zip"] = applied.get("user_zip", DEFAULT_ZIP)
 
-    # Quality
     st.sidebar.markdown(
         '<div class="fg"><p class="fg-label">Quality</p>'
-        '<p class="fg-help">Set a floor if you like — or leave open to see everyone.</p></div>',
+        '<p class="fg-help">Set a floor if you like — or leave open.</p></div>',
         unsafe_allow_html=True,
     )
     score_keys = list(QUALITY_SCORE_OPTIONS.keys())
@@ -998,10 +1068,9 @@ def render_sidebar() -> None:
         "Care strengths that matter to you",
         QUALITY_METRIC_OPTIONS,
         default=applied.get("quality_metrics", []),
-        placeholder="Optional — pick any that matter",
+        placeholder="Optional",
     )
 
-    # Birth experience
     st.sidebar.markdown(
         '<div class="fg"><p class="fg-label">Birth experience</p>'
         '<p class="fg-help">Hospital, midwifery, NICU, water birth, and more.</p></div>',
@@ -1011,13 +1080,12 @@ def render_sidebar() -> None:
         "Services & care style",
         SERVICE_OPTIONS,
         default=applied.get("services", []),
-        placeholder="Optional — pick any that fit you",
+        placeholder="Optional",
     )
 
-    # Budget
     st.sidebar.markdown(
         '<div class="fg"><p class="fg-label">Budget</p>'
-        '<p class="fg-help">Facility estimates only — insurance changes your share.</p></div>',
+        '<p class="fg-help">Facility estimates — insurance changes your share.</p></div>',
         unsafe_allow_html=True,
     )
     v_price = st.sidebar.slider(
@@ -1026,7 +1094,6 @@ def render_sidebar() -> None:
         (int(applied.get("price_min", 4000)), int(applied.get("price_max", 25000))),
         step=500,
         format="$%d",
-        help="Illustrative facility charge range before insurance.",
     )
     draft["price_min"], draft["price_max"] = v_price
 
@@ -1036,7 +1103,6 @@ def render_sidebar() -> None:
         (int(applied.get("csection_price_min", 5000)), int(applied.get("csection_price_max", 30000))),
         step=500,
         format="$%d",
-        help="Birth centers without C-section on site still appear.",
     )
     draft["csection_price_min"], draft["csection_price_max"] = cs_price
 
@@ -1044,7 +1110,7 @@ def render_sidebar() -> None:
         "Insurance to keep in mind",
         INSURANCE_OPTIONS,
         default=applied.get("insurance", []),
-        placeholder="Optional — any plans you use",
+        placeholder="Optional",
     )
 
     with st.sidebar.expander("Experience & volume (optional)"):
@@ -1062,7 +1128,8 @@ def render_sidebar() -> None:
         )
 
     st.sidebar.markdown("")
-    c1, c2 = st.sidebar.columns([1.4, 1])
+    st.sidebar.markdown("")
+    c1, c2 = st.sidebar.columns([1.45, 1])
     with c1:
         if st.button("Apply filters", type="primary", use_container_width=True):
             st.session_state.applied_filters = draft
@@ -1124,7 +1191,7 @@ def render_card(row: pd.Series, key_prefix: str = "search") -> None:
         unsafe_allow_html=True,
     )
 
-    b1, b2 = st.columns([1.35, 1])
+    b1, b2 = st.columns([1.4, 1])
     with b1:
         if st.button(
             "♥ Saved" if saved else "♡ Save to compare",
@@ -1170,7 +1237,6 @@ def render_search(df: pd.DataFrame) -> None:
         "Sort results",
         ["Highest quality", "Lowest cost", "Nearest", "A–Z"],
         index=0,
-        help="Highest quality is the default so strong options rise to the top.",
     )
     out = df.copy()
     if sort == "Highest quality":
@@ -1190,7 +1256,7 @@ def render_map(df: pd.DataFrame) -> None:
     st.markdown(
         '<div class="map-wrap"><p class="map-cap">'
         "Explore locations across Georgia. Tap a pin for a quick snapshot — "
-        "the same trusted listings as Search, laid out on the map."
+        "the same trusted listings as Search, on the map."
         "</p>",
         unsafe_allow_html=True,
     )
@@ -1222,9 +1288,9 @@ def render_map(df: pd.DataFrame) -> None:
                     f"Quality: {int(row.get('quality_score', 70))}"
                 ),
                 tooltip=row["name"],
-                icon=folium.Icon(color="green", icon="info-sign"),
+                icon=folium.Icon(color="beige", icon="info-sign"),
             ).add_to(cluster)
-        st_folium(m, width=None, height=520, returned_objects=[])
+        st_folium(m, width=None, height=540, returned_objects=[])
     st.markdown("</div>", unsafe_allow_html=True)
 
 
@@ -1238,7 +1304,7 @@ def render_resources() -> None:
     for category in resources["category"].unique():
         st.markdown(f'<p class="res-section">{category}</p>', unsafe_allow_html=True)
         cat = resources[resources["category"] == category]
-        cols = st.columns(2, gap="medium")
+        cols = st.columns(2, gap="large")
         for i, (_, r) in enumerate(cat.iterrows()):
             with cols[i % 2]:
                 st.markdown(
