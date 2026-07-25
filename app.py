@@ -449,22 +449,32 @@ div[data-testid="stTickBarMax"] {
     color: var(--blush-hover) !important;
 }
 
-/* Search */
-.search-box {
-    background: var(--white);
-    border: 1px solid var(--line);
-    border-radius: 22px;
-    padding: 1.35rem 1.5rem 0.55rem;
-    margin-bottom: 2rem;
-    box-shadow: var(--sm);
+/* Main search field — single clear control */
+section.main .stTextInput {
+    margin-bottom: 1.75rem !important;
 }
-.search-lbl {
-    font-size: 0.72rem;
-    font-weight: 600;
-    letter-spacing: 0.13em;
-    text-transform: uppercase;
-    color: var(--muted);
-    margin: 0 0 0.1rem;
+section.main .stTextInput label {
+    font-size: 1rem !important;
+    font-weight: 600 !important;
+    color: var(--ink) !important;
+    letter-spacing: -0.015em !important;
+    margin-bottom: 0.4rem !important;
+}
+section.main .stTextInput input {
+    font-size: 1.02rem !important;
+    padding: 1rem 1.2rem !important;
+    border-radius: 16px !important;
+    border: 1.5px solid var(--line) !important;
+    box-shadow: var(--sm) !important;
+    background: var(--white) !important;
+}
+section.main .stTextInput input:focus {
+    border-color: var(--blush) !important;
+    box-shadow: 0 0 0 3px rgba(201,154,138,0.18) !important;
+}
+section.main .stTextInput input::placeholder {
+    color: var(--muted) !important;
+    opacity: 0.85;
 }
 
 /* Tabs */
@@ -1467,15 +1477,11 @@ def main() -> None:
     render_methodology()
     render_gentle_note()
 
-    st.markdown(
-        '<div class="search-box"><p class="search-lbl">Search</p></div>',
-        unsafe_allow_html=True,
-    )
     st.session_state.search_query = st.text_input(
-        "Search by name or city",
+        "Find a hospital or birth center",
         value=st.session_state.search_query,
-        placeholder="Hospital name, city, or region…",
-        label_visibility="collapsed",
+        placeholder="Type a name, city, or region — e.g. Northside, Savannah…",
+        help="Narrows the list as you type. Use the left sidebar for region, quality, and budget filters.",
     )
 
     filters = copy.deepcopy(st.session_state.applied_filters)
