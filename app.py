@@ -1775,34 +1775,7 @@ def main() -> None:
     filtered = apply_filters(facilities, filters, user_zip=zip_clean)
     n_saved = len(st.session_state.saved_ids)
 
-    # Separate chips above the tab bar — easy to scan, doesn’t run together
-    st.markdown(
-        """
-        <div class="nav-legend">
-            <p class="nav-legend-title">Where to go</p>
-            <div class="nav-chips">
-                <div class="nav-chip">
-                    <span class="nav-chip-name">Explore</span>
-                    <span class="nav-chip-desc">Find places</span>
-                </div>
-                <div class="nav-chip">
-                    <span class="nav-chip-name">Map</span>
-                    <span class="nav-chip-desc">See locations</span>
-                </div>
-                <div class="nav-chip highlight">
-                    <span class="nav-chip-name">Resources</span>
-                    <span class="nav-chip-desc">Classes &amp; postpartum</span>
-                </div>
-                <div class="nav-chip">
-                    <span class="nav-chip-name">Saved</span>
-                    <span class="nav-chip-desc">Your shortlist</span>
-                </div>
-            </div>
-        </div>
-        """,
-        unsafe_allow_html=True,
-    )
-
+    # One navigation only — the working tabs (no decorative duplicate bar)
     saved_label = f"Saved · {n_saved}" if n_saved else "Saved"
     t_explore, t_map, t_resources, t_saved = st.tabs([
         "Explore",
