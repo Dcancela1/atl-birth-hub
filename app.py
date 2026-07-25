@@ -702,61 +702,40 @@ section.main .stTextInput input::placeholder {
     font-size: 1rem;
     color: var(--ink2);
     line-height: 1.6;
-    margin: 0.55rem 0 0.85rem;
+    margin: 0.55rem 0 0;
     font-style: italic;
 }
-.fc-phone {
-    display: flex;
-    align-items: center;
-    gap: 0.75rem;
-    background: var(--sage-soft);
-    border: 1px solid var(--sage-line);
-    border-radius: 14px;
-    padding: 0.85rem 1.1rem;
-    margin: 0.25rem 0 0.15rem;
-}
-.fc-phone .ico {
-    font-size: 1.15rem;
-    line-height: 1;
-}
-.fc-phone .lbl {
-    font-size: 0.7rem;
-    font-weight: 600;
-    text-transform: uppercase;
-    letter-spacing: 0.07em;
-    color: var(--sage-deep);
-    margin: 0 0 0.15rem;
-}
-.fc-phone a {
-    font-size: 1.08rem;
-    font-weight: 600;
-    color: var(--ink);
-    text-decoration: none;
-    letter-spacing: -0.01em;
-}
-.fc-phone a:hover { color: var(--sage-deep); text-decoration: underline; }
-.fc-phone .hint {
+
+/* Phone CTA — Streamlit link_button sits under each card */
+.phone-label {
     font-size: 0.78rem;
+    font-weight: 600;
+    color: var(--sage-deep);
+    margin: 0.35rem 0 0.15rem;
+}
+.phone-hint {
+    font-size: 0.8rem;
     color: var(--muted);
-    margin: 0.15rem 0 0;
+    margin: 0.25rem 0 0.65rem;
+    line-height: 1.45;
 }
 
-/* Nav guide under main tabs */
-.nav-guide {
+/* Nav legend — sits above the Explore / Map / Resources / Saved tiles */
+.nav-legend {
     background: var(--white);
     border: 1px solid var(--line);
     border-radius: 16px;
-    padding: 0.95rem 1.2rem;
-    margin: -0.5rem 0 1.5rem;
+    padding: 0.9rem 1.15rem;
+    margin: 0 0 0.85rem;
     box-shadow: var(--sx);
     font-size: 0.9rem;
     color: var(--ink2);
     line-height: 1.55;
 }
-.nav-guide strong { color: var(--ink); font-weight: 600; }
-.nav-guide span.sep {
-    color: var(--line);
-    margin: 0 0.35rem;
+.nav-legend strong { color: var(--ink); font-weight: 600; }
+.nav-legend .res-callout {
+    color: var(--sage-deep);
+    font-weight: 600;
 }
 
 /* Quick stats under results header */
@@ -1448,23 +1427,6 @@ def render_card(row: pd.Series, key_prefix: str = "search") -> None:
     highlight = row.get("key_strength") or row.get("quality_label") or ""
     ftype = row.get("type", "Hospital")
 
-    phone_raw = row.get("phone")
-    phone_html = ""
-    if phone_raw is not None and str(phone_raw).strip() and str(phone_raw).lower() not in ("nan", "none"):
-        phone_display = str(phone_raw).strip()
-        phone_digits = "".join(c for c in phone_display if c.isdigit() or c == "+")
-        if phone_digits:
-            phone_html = f"""
-            <div class="fc-phone">
-                <span class="ico">📞</span>
-                <div>
-                    <p class="lbl">Call about pricing & tours</p>
-                    <a href="tel:{esc(phone_digits)}">{esc(phone_display)}</a>
-                    <p class="hint">Ask billing for a Good Faith Estimate with your insurance</p>
-                </div>
-            </div>
-            """
-
     st.markdown(
         f"""
         <div class="fc">
@@ -1491,11 +1453,37 @@ def render_card(row: pd.Series, key_prefix: str = "search") -> None:
                 </div>
             </div>
             <p class="fc-blurb">{esc(highlight)}</p>
-            {phone_html}
         </div>
         """,
         unsafe_allow_html=True,
     )
+
+    # Phone as a real Streamlit control (reliable on phone; no raw HTML flash)
+    phone_raw = row.get("phone")
+    phone_display = None
+    phone_digits = None
+    if phone_raw is not None and str(phone_raw).strip() and str(phone_raw).lower() not in ("nan", "none"):
+        phone_display = str(phone_raw).strip()
+        phone_digits = "".join(c for c in phone_display if c.isdigit())
+        if len(phone_digits) == 10:
+            phone_digits = f"+1{phone_digits}"
+        elif phone_digits and not phone_digits.startswith("+"):
+            phone_digits = f"+{phone_digits}" if phone_digits.startswith("1") else f"+1{phone_digits}"
+
+    if phone_display and phone_digits:
+        st.markdown(
+            '<p class="phone-label">Call about pricing &amp; tours</p>',
+            unsafe_allow_html=True,
+        )
+        st.link_button(
+            f"📞  {phone_display}",
+            f"tel:{phone_digits}",
+            use_container_width=True,
+        )
+        st.markdown(
+            '<p class="phone-hint">Ask billing for a Good Faith Estimate with your insurance.</p>',
+            unsafe_allow_html=True,
+        )
 
     b1, b2 = st.columns([1.45, 1])
     with b1:
@@ -1518,9 +1506,8 @@ def render_card(row: pd.Series, key_prefix: str = "search") -> None:
             )
             if pd.notna(row.get("address")):
                 st.caption(str(row["address"]))
-            phone = row.get("phone")
-            if phone is not None and str(phone).strip() and str(phone).lower() not in ("nan", "none"):
-                st.markdown(f"**Phone:** {phone}")
+            if phone_display:
+                st.markdown(f"**Phone:** {phone_display}")
 
 
 def render_result_stats(df: pd.DataFrame) -> None:
@@ -1806,7 +1793,22 @@ def main() -> None:
     filtered = apply_filters(facilities, filters, user_zip=zip_clean)
     n_saved = len(st.session_state.saved_ids)
 
-    # Primary journey: Explore → Map → Resources → Saved
+    # Legend sits *above* the tab tiles (not inside each tab’s content)
+    st.markdown(
+        """
+        <div class="nav-legend">
+            <strong>Explore</strong> places
+            &nbsp;·&nbsp;
+            <strong>Map</strong> them
+            &nbsp;·&nbsp;
+            <span class="res-callout">Resources — classes, postpartum &amp; feeding support</span>
+            &nbsp;·&nbsp;
+            <strong>Saved</strong> shortlist
+        </div>
+        """,
+        unsafe_allow_html=True,
+    )
+
     saved_label = f"Saved · {n_saved}" if n_saved else "Saved"
     t_explore, t_map, t_resources, t_saved = st.tabs([
         "Explore",
@@ -1815,34 +1817,13 @@ def main() -> None:
         saved_label,
     ])
 
-    def render_nav_guide() -> None:
-        """Sits at the top of each tab — directly under the Explore/Map/Resources/Saved tiles."""
-        st.markdown(
-            """
-            <div class="nav-guide">
-                <strong>Explore</strong> places
-                <span class="sep">·</span>
-                <strong>Map</strong> them
-                <span class="sep">·</span>
-                <strong>Resources</strong> for classes, postpartum &amp; feeding support
-                <span class="sep">·</span>
-                <strong>Saved</strong> shortlist
-            </div>
-            """,
-            unsafe_allow_html=True,
-        )
-
     with t_explore:
-        render_nav_guide()
         render_search(filtered)
     with t_map:
-        render_nav_guide()
         render_map(filtered)
     with t_resources:
-        render_nav_guide()
         render_resources()
     with t_saved:
-        render_nav_guide()
         render_saved(facilities)
 
     render_footer(total)
