@@ -581,19 +581,43 @@ section.main .stTextInput input::placeholder {
     }
 }
 
-/* ════════════ FACILITY CARDS ════════════ */
+/* ════════════ FACILITY CARDS (one bordered unit: info + phone + save) ════════════ */
+div[data-testid="stVerticalBlockBorderWrapper"] {
+    background: var(--white) !important;
+    border: 1px solid var(--line) !important;
+    border-radius: 20px !important;
+    box-shadow: var(--md) !important;
+    padding: 0.35rem 0.85rem 0.85rem !important;
+    margin-bottom: 2.15rem !important;
+    transition: box-shadow 0.22s ease, transform 0.22s ease !important;
+}
+div[data-testid="stVerticalBlockBorderWrapper"]:hover {
+    box-shadow: var(--lg) !important;
+    transform: translateY(-2px);
+}
+/* Inner HTML — no second outer card chrome */
 .fc {
-    background: var(--white);
-    border: 1px solid var(--line);
-    border-radius: 20px;
-    padding: 2.35rem 2.25rem 2rem;
-    margin-bottom: 2.35rem;
-    box-shadow: var(--md);
-    transition: transform 0.22s ease, box-shadow 0.22s ease;
+    background: transparent;
+    border: none;
+    border-radius: 0;
+    padding: 1.15rem 0.65rem 0.5rem;
+    margin-bottom: 0;
+    box-shadow: none;
 }
 .fc:hover {
-    transform: translateY(-4px);
-    box-shadow: var(--lg);
+    transform: none;
+    box-shadow: none;
+}
+/* Compact actions under cost */
+.fc-actions .stButton > button,
+.fc-actions .stLinkButton > a {
+    min-height: 2.65rem !important;
+    padding: 0.55rem 1rem !important;
+    font-size: 0.9rem !important;
+}
+.fc-actions {
+    margin-top: 0.15rem;
+    padding-top: 0.35rem;
 }
 .fc-row {
     display: flex;
@@ -1391,6 +1415,7 @@ def render_sidebar() -> None:
 
 
 def render_card(row: pd.Series, key_prefix: str = "search") -> None:
+    """One bordered card: info → price → phone → save (all inside the same tile)."""
     fid = str(row["facility_id"])
     saved = is_saved(fid)
     score = int(row.get("quality_score", 70))
@@ -1409,87 +1434,81 @@ def render_card(row: pd.Series, key_prefix: str = "search") -> None:
     highlight = row.get("key_strength") or row.get("quality_label") or ""
     ftype = row.get("type", "Hospital")
 
-    st.markdown(
-        f"""
-        <div class="fc">
-            <div class="fc-row">
-                <div>
-                    <p class="fc-name">{esc(row['name'])}</p>
-                    <p class="fc-meta">{esc(meta)}</p>
-                    <span class="fc-type">{esc(ftype)}</span>
-                </div>
-                <div class="fc-score {tier}">
-                    <span class="n">{score}</span>
-                    <span class="l">{tier_label}</span>
-                </div>
-            </div>
-            <div class="fc-tags">{tags}</div>
-            <div class="fc-cost">
-                <div class="ci">
-                    <strong>Vaginal estimate</strong>
-                    <span>{esc(row.get('vaginal_cost_display', '—'))}</span>
-                </div>
-                <div class="ci">
-                    <strong>C-section estimate</strong>
-                    <span>{esc(row.get('csection_cost_display', '—'))}</span>
-                </div>
-            </div>
-            <p class="fc-blurb">{esc(highlight)}</p>
-        </div>
-        """,
-        unsafe_allow_html=True,
-    )
-
-    # Phone as a real Streamlit control (reliable on phone; no raw HTML flash)
     phone_raw = row.get("phone")
     phone_display = None
     phone_digits = None
     if phone_raw is not None and str(phone_raw).strip() and str(phone_raw).lower() not in ("nan", "none"):
         phone_display = str(phone_raw).strip()
-        phone_digits = "".join(c for c in phone_display if c.isdigit())
-        if len(phone_digits) == 10:
-            phone_digits = f"+1{phone_digits}"
-        elif phone_digits and not phone_digits.startswith("+"):
-            phone_digits = f"+{phone_digits}" if phone_digits.startswith("1") else f"+1{phone_digits}"
+        digits = "".join(c for c in phone_display if c.isdigit())
+        if len(digits) == 10:
+            phone_digits = f"+1{digits}"
+        elif digits:
+            phone_digits = f"+{digits}" if digits.startswith("1") else f"+1{digits}"
 
-    if phone_display and phone_digits:
+    # Single Streamlit bordered container = one visual “tile”
+    with st.container(border=True):
         st.markdown(
-            '<p class="phone-label">Call about pricing &amp; tours</p>',
+            f"""
+            <div class="fc">
+                <div class="fc-row">
+                    <div>
+                        <p class="fc-name">{esc(row['name'])}</p>
+                        <p class="fc-meta">{esc(meta)}</p>
+                        <span class="fc-type">{esc(ftype)}</span>
+                    </div>
+                    <div class="fc-score {tier}">
+                        <span class="n">{score}</span>
+                        <span class="l">{tier_label}</span>
+                    </div>
+                </div>
+                <div class="fc-tags">{tags}</div>
+                <div class="fc-cost">
+                    <div class="ci">
+                        <strong>Vaginal estimate</strong>
+                        <span>{esc(row.get('vaginal_cost_display', '—'))}</span>
+                    </div>
+                    <div class="ci">
+                        <strong>C-section estimate</strong>
+                        <span>{esc(row.get('csection_cost_display', '—'))}</span>
+                    </div>
+                </div>
+                <p class="fc-blurb">{esc(highlight)}</p>
+            </div>
+            """,
             unsafe_allow_html=True,
         )
-        st.link_button(
-            f"📞  {phone_display}",
-            f"tel:{phone_digits}",
-            use_container_width=True,
-        )
-        st.markdown(
-            '<p class="phone-hint">Ask billing for a Good Faith Estimate with your insurance.</p>',
-            unsafe_allow_html=True,
-        )
 
-    b1, b2 = st.columns([1.45, 1])
-    with b1:
-        if st.button(
-            "♥ Saved" if saved else "♡ Save to compare",
-            key=f"save_btn_{key_prefix}_{fid}",
-            type="primary" if not saved else "secondary",
-            use_container_width=True,
-        ):
-            toggle_save(fid)
-            st.rerun()
-    with b2:
-        with st.expander("View details"):
-            st.markdown(f"**Strengths**  \n{row.get('strengths', '—')}")
-            st.markdown(f"**What to consider**  \n{row.get('considerations', '—')}")
-            st.markdown(
-                f"**NICU:** {row.get('nicu_level', '—')} · "
-                f"**C-section rate:** {row.get('csection_rate_display', '—')} · "
-                f"**Quality label:** {row.get('quality_label', '—')}"
+        # Under price estimates — compact, same tile
+        if phone_display and phone_digits:
+            st.link_button(
+                f"📞  Call {phone_display}",
+                f"tel:{phone_digits}",
+                use_container_width=True,
+                help="Ask billing for a Good Faith Estimate with your insurance.",
             )
-            if pd.notna(row.get("address")):
-                st.caption(str(row["address"]))
-            if phone_display:
-                st.markdown(f"**Phone:** {phone_display}")
+
+        b1, b2 = st.columns([1.35, 1])
+        with b1:
+            if st.button(
+                "♥ Saved" if saved else "♡ Save to compare",
+                key=f"save_btn_{key_prefix}_{fid}",
+                type="primary" if not saved else "secondary",
+                use_container_width=True,
+            ):
+                toggle_save(fid)
+                st.rerun()
+        with b2:
+            with st.expander("Details"):
+                st.markdown(f"**Strengths**  \n{row.get('strengths', '—')}")
+                st.markdown(f"**What to consider**  \n{row.get('considerations', '—')}")
+                st.markdown(
+                    f"**NICU:** {row.get('nicu_level', '—')} · "
+                    f"**C-section rate:** {row.get('csection_rate_display', '—')}"
+                )
+                if pd.notna(row.get("address")):
+                    st.caption(str(row["address"]))
+                if phone_display:
+                    st.caption(f"Phone: {phone_display}")
 
 
 def render_result_stats(df: pd.DataFrame) -> None:
