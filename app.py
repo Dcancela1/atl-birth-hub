@@ -532,31 +532,54 @@ section.main .stTextInput input::placeholder {
     opacity: 0.85;
 }
 
-/* Tabs */
+/* Tabs — primary navigation: high contrast, hard to miss */
 .stTabs [data-baseweb="tab-list"] {
-    gap: 0.3rem;
+    gap: 0.35rem;
     background: var(--white);
-    border: 1px solid var(--line);
+    border: 1.5px solid var(--line);
     border-radius: 18px;
-    padding: 0.5rem;
-    box-shadow: var(--sm);
-    margin-bottom: 2rem !important;
+    padding: 0.45rem;
+    box-shadow: var(--md);
+    margin-bottom: 1.75rem !important;
+    flex-wrap: nowrap !important;
 }
 .stTabs [data-baseweb="tab"] {
     background: transparent !important;
-    color: var(--muted) !important;
-    font-weight: 600 !important;
-    font-size: 0.93rem !important;
-    padding: 0.85rem 1.5rem !important;
-    border-radius: 12px !important;
+    color: var(--ink2) !important;
+    font-weight: 650 !important;
+    font-size: 0.98rem !important;
+    padding: 0.95rem 1.15rem !important;
+    border-radius: 13px !important;
+    flex: 1 1 0 !important;
+    justify-content: center !important;
+    text-align: center !important;
+    min-height: 3.1rem !important;
+    transition: background 0.15s ease, color 0.15s ease !important;
+}
+.stTabs [data-baseweb="tab"]:hover {
+    background: var(--bg) !important;
+    color: var(--ink) !important;
 }
 .stTabs [aria-selected="true"] {
-    color: var(--ink) !important;
-    background: var(--bg) !important;
-    box-shadow: var(--sx) !important;
+    color: #FFFFFF !important;
+    background: var(--sage) !important;
+    box-shadow: 0 3px 12px rgba(122, 158, 142, 0.35) !important;
+}
+.stTabs [aria-selected="true"] p,
+.stTabs [aria-selected="true"] span,
+.stTabs [aria-selected="true"] * {
+    color: #FFFFFF !important;
 }
 .stTabs [data-baseweb="tab-highlight"],
 .stTabs [data-baseweb="tab-border"] { display: none !important; }
+/* Sticky-ish feel: keep nav near top of content scroll area on desktop */
+@media (min-width: 769px) {
+    .stTabs [data-baseweb="tab-list"] {
+        position: sticky;
+        top: 0.5rem;
+        z-index: 50;
+    }
+}
 
 /* ════════════ FACILITY CARDS ════════════ */
 .fc {
@@ -932,7 +955,16 @@ section[data-testid="stSidebar"] .stButton { margin-top: 0.25rem; }
     .fc-score .n { font-size: 1.45rem; }
     .fc-cost { gap: 1.35rem; padding: 1.1rem 1.2rem; }
     .rh-t { font-size: 1.3rem; }
-    .stTabs [data-baseweb="tab"] { padding: 0.65rem 0.9rem !important; font-size: 0.84rem !important; }
+    .stTabs [data-baseweb="tab-list"] {
+        padding: 0.35rem !important;
+        gap: 0.2rem !important;
+    }
+    .stTabs [data-baseweb="tab"] {
+        padding: 0.75rem 0.4rem !important;
+        font-size: 0.78rem !important;
+        min-height: 2.85rem !important;
+        flex: 1 1 25% !important;
+    }
 }
 </style>
 """
@@ -1690,13 +1722,14 @@ def main() -> None:
 
     filtered = apply_filters(facilities, filters, user_zip=zip_clean)
     n_saved = len(st.session_state.saved_ids)
-    n_res = len(load_resources())
 
+    # Clear nav labels — result count lives in the Explore header, not every tab name
+    saved_label = f"Saved · {n_saved}" if n_saved else "Saved"
     t_search, t_map, t_resources, t_saved = st.tabs([
-        f"Search ({len(filtered)})",
+        "Explore",
         "Map",
-        f"Resources ({n_res})",
-        f"Saved ({n_saved})",
+        "Guides",
+        saved_label,
     ])
     with t_search:
         render_search(filtered)
