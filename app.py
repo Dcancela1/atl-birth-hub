@@ -581,43 +581,34 @@ section.main .stTextInput input::placeholder {
     }
 }
 
-/* ════════════ FACILITY CARDS (one bordered unit: info + phone + save) ════════════ */
-div[data-testid="stVerticalBlockBorderWrapper"] {
+/* ════════════ FACILITY CARDS ════════════ */
+/* Hospital tile = Streamlit bordered container; keep it clean and simple */
+section.main div[data-testid="stVerticalBlockBorderWrapper"] {
     background: var(--white) !important;
     border: 1px solid var(--line) !important;
     border-radius: 20px !important;
     box-shadow: var(--md) !important;
-    padding: 0.35rem 0.85rem 0.85rem !important;
-    margin-bottom: 2.15rem !important;
-    transition: box-shadow 0.22s ease, transform 0.22s ease !important;
+    padding: 1.25rem 1.35rem 1.1rem !important;
+    margin-bottom: 0.65rem !important;
 }
-div[data-testid="stVerticalBlockBorderWrapper"]:hover {
-    box-shadow: var(--lg) !important;
-    transform: translateY(-2px);
-}
-/* Inner HTML — no second outer card chrome */
 .fc {
     background: transparent;
     border: none;
-    border-radius: 0;
-    padding: 1.15rem 0.65rem 0.5rem;
-    margin-bottom: 0;
+    padding: 0 0 0.35rem;
+    margin: 0;
     box-shadow: none;
 }
-.fc:hover {
-    transform: none;
-    box-shadow: none;
-}
-/* Compact actions under cost */
-.fc-actions .stButton > button,
-.fc-actions .stLinkButton > a {
-    min-height: 2.65rem !important;
+/* Compact full-width actions under cost, still in the hospital tile */
+section.main div[data-testid="stVerticalBlockBorderWrapper"] .stButton > button,
+section.main div[data-testid="stVerticalBlockBorderWrapper"] .stLinkButton > a {
+    min-height: 2.7rem !important;
     padding: 0.55rem 1rem !important;
     font-size: 0.9rem !important;
+    margin-top: 0.25rem !important;
 }
-.fc-actions {
-    margin-top: 0.15rem;
-    padding-top: 0.35rem;
+/* Details sits as its own block under the hospital tile */
+.details-tile {
+    margin: 0 0 2rem;
 }
 .fc-row {
     display: flex;
@@ -1415,7 +1406,10 @@ def render_sidebar() -> None:
 
 
 def render_card(row: pd.Series, key_prefix: str = "search") -> None:
-    """One bordered card: info → price → phone → save (all inside the same tile)."""
+    """
+    Hospital tile: name → score → tags → prices → phone → save.
+    Details is a separate tile directly underneath (not inside the hospital card).
+    """
     fid = str(row["facility_id"])
     saved = is_saved(fid)
     score = int(row.get("quality_score", 70))
@@ -1433,6 +1427,7 @@ def render_card(row: pd.Series, key_prefix: str = "search") -> None:
     tags = "".join(f'<span class="fc-tag">{esc(s)}</span>' for s in services[:5])
     highlight = row.get("key_strength") or row.get("quality_label") or ""
     ftype = row.get("type", "Hospital")
+    name = str(row["name"])
 
     phone_raw = row.get("phone")
     phone_display = None
@@ -1445,14 +1440,14 @@ def render_card(row: pd.Series, key_prefix: str = "search") -> None:
         elif digits:
             phone_digits = f"+{digits}" if digits.startswith("1") else f"+1{digits}"
 
-    # Single Streamlit bordered container = one visual “tile”
+    # ── Hospital tile (info + price + call + save only) ──
     with st.container(border=True):
         st.markdown(
             f"""
             <div class="fc">
                 <div class="fc-row">
                     <div>
-                        <p class="fc-name">{esc(row['name'])}</p>
+                        <p class="fc-name">{esc(name)}</p>
                         <p class="fc-meta">{esc(meta)}</p>
                         <span class="fc-type">{esc(ftype)}</span>
                     </div>
@@ -1478,7 +1473,6 @@ def render_card(row: pd.Series, key_prefix: str = "search") -> None:
             unsafe_allow_html=True,
         )
 
-        # Under price estimates — compact, same tile
         if phone_display and phone_digits:
             st.link_button(
                 f"📞  Call {phone_display}",
@@ -1487,28 +1481,28 @@ def render_card(row: pd.Series, key_prefix: str = "search") -> None:
                 help="Ask billing for a Good Faith Estimate with your insurance.",
             )
 
-        b1, b2 = st.columns([1.35, 1])
-        with b1:
-            if st.button(
-                "♥ Saved" if saved else "♡ Save to compare",
-                key=f"save_btn_{key_prefix}_{fid}",
-                type="primary" if not saved else "secondary",
-                use_container_width=True,
-            ):
-                toggle_save(fid)
-                st.rerun()
-        with b2:
-            with st.expander("Details"):
-                st.markdown(f"**Strengths**  \n{row.get('strengths', '—')}")
-                st.markdown(f"**What to consider**  \n{row.get('considerations', '—')}")
-                st.markdown(
-                    f"**NICU:** {row.get('nicu_level', '—')} · "
-                    f"**C-section rate:** {row.get('csection_rate_display', '—')}"
-                )
-                if pd.notna(row.get("address")):
-                    st.caption(str(row["address"]))
-                if phone_display:
-                    st.caption(f"Phone: {phone_display}")
+        if st.button(
+            "♥ Saved" if saved else "♡ Save to compare",
+            key=f"save_btn_{key_prefix}_{fid}",
+            type="primary" if not saved else "secondary",
+            use_container_width=True,
+        ):
+            toggle_save(fid)
+            st.rerun()
+
+    # ── Details tile — separate, directly under the hospital card ──
+    with st.expander(f"Details — {name}"):
+        st.markdown(f"**Strengths**  \n{row.get('strengths', '—')}")
+        st.markdown(f"**What to consider**  \n{row.get('considerations', '—')}")
+        st.markdown(
+            f"**NICU:** {row.get('nicu_level', '—')} · "
+            f"**C-section rate:** {row.get('csection_rate_display', '—')} · "
+            f"**Quality:** {row.get('quality_label', '—')}"
+        )
+        if pd.notna(row.get("address")):
+            st.caption(str(row["address"]))
+        if phone_display:
+            st.caption(f"Phone: {phone_display}")
 
 
 def render_result_stats(df: pd.DataFrame) -> None:
