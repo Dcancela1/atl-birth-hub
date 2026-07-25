@@ -720,22 +720,60 @@ section.main .stTextInput input::placeholder {
     line-height: 1.45;
 }
 
-/* Nav legend — sits above the Explore / Map / Resources / Saved tiles */
+/* Nav legend — separate chips so labels don’t run together */
 .nav-legend {
     background: var(--white);
     border: 1px solid var(--line);
     border-radius: 16px;
-    padding: 0.9rem 1.15rem;
+    padding: 0.85rem 1rem;
     margin: 0 0 0.85rem;
     box-shadow: var(--sx);
-    font-size: 0.9rem;
-    color: var(--ink2);
-    line-height: 1.55;
 }
-.nav-legend strong { color: var(--ink); font-weight: 600; }
-.nav-legend .res-callout {
-    color: var(--sage-deep);
+.nav-legend-title {
+    font-size: 0.7rem;
     font-weight: 600;
+    letter-spacing: 0.1em;
+    text-transform: uppercase;
+    color: var(--muted);
+    margin: 0 0 0.65rem;
+}
+.nav-chips {
+    display: flex;
+    flex-wrap: wrap;
+    gap: 0.5rem;
+}
+.nav-chip {
+    display: inline-flex;
+    flex-direction: column;
+    gap: 0.12rem;
+    background: var(--bg);
+    border: 1px solid var(--line);
+    border-radius: 12px;
+    padding: 0.55rem 0.85rem;
+    min-width: 5.5rem;
+}
+.nav-chip .nav-chip-name {
+    font-size: 0.88rem;
+    font-weight: 650;
+    color: var(--ink);
+    letter-spacing: -0.01em;
+}
+.nav-chip .nav-chip-desc {
+    font-size: 0.75rem;
+    font-weight: 400;
+    color: var(--muted);
+    line-height: 1.35;
+}
+.nav-chip.highlight {
+    background: var(--sage-soft);
+    border-color: var(--sage-line);
+}
+.nav-chip.highlight .nav-chip-name { color: var(--sage-deep); }
+@media (max-width: 768px) {
+    .nav-chip {
+        flex: 1 1 calc(50% - 0.5rem);
+        min-width: 0;
+    }
 }
 
 /* Quick stats under results header */
@@ -1793,17 +1831,29 @@ def main() -> None:
     filtered = apply_filters(facilities, filters, user_zip=zip_clean)
     n_saved = len(st.session_state.saved_ids)
 
-    # Legend sits *above* the tab tiles (not inside each tab’s content)
+    # Separate chips above the tab bar — easy to scan, doesn’t run together
     st.markdown(
         """
         <div class="nav-legend">
-            <strong>Explore</strong> places
-            &nbsp;·&nbsp;
-            <strong>Map</strong> them
-            &nbsp;·&nbsp;
-            <span class="res-callout">Resources — classes, postpartum &amp; feeding support</span>
-            &nbsp;·&nbsp;
-            <strong>Saved</strong> shortlist
+            <p class="nav-legend-title">Where to go</p>
+            <div class="nav-chips">
+                <div class="nav-chip">
+                    <span class="nav-chip-name">Explore</span>
+                    <span class="nav-chip-desc">Find places</span>
+                </div>
+                <div class="nav-chip">
+                    <span class="nav-chip-name">Map</span>
+                    <span class="nav-chip-desc">See locations</span>
+                </div>
+                <div class="nav-chip highlight">
+                    <span class="nav-chip-name">Resources</span>
+                    <span class="nav-chip-desc">Classes &amp; postpartum</span>
+                </div>
+                <div class="nav-chip">
+                    <span class="nav-chip-name">Saved</span>
+                    <span class="nav-chip-desc">Your shortlist</span>
+                </div>
+            </div>
         </div>
         """,
         unsafe_allow_html=True,
