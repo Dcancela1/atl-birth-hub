@@ -119,8 +119,8 @@ div[data-testid="stVerticalBlockBorderWrapper"] {
     background: var(--white);
     border: 1px solid var(--line);
     border-radius: 22px;
-    padding: 2rem 2.25rem 1.75rem;
-    margin-bottom: 1.75rem;
+    padding: 2.15rem 2.4rem 1.9rem;
+    margin-bottom: 2rem;
     box-shadow: var(--sm);
 }
 .abh-logo {
@@ -179,8 +179,8 @@ div[data-testid="stVerticalBlockBorderWrapper"] {
         linear-gradient(168deg, #FFFFFF 0%, #FBF8F4 100%);
     border: 1px solid var(--line);
     border-radius: 24px;
-    padding: 3.5rem 3rem 3.25rem;
-    margin-bottom: 2.25rem;
+    padding: 3.75rem 3.15rem 3.5rem;
+    margin-bottom: 2.5rem;
     box-shadow: var(--md);
 }
 .abh-kicker {
@@ -342,7 +342,7 @@ div[role="radiogroup"] label:has(input:checked) {
     border-color: var(--sage-line) !important;
 }
 
-/* Sliders */
+/* Sliders — soft blush, hide noisy tick labels */
 div[data-testid="stSlider"] > div > div > div { background: var(--blush) !important; }
 div[data-testid="stSlider"] [role="slider"] {
     background: var(--blush) !important;
@@ -352,6 +352,54 @@ div[data-testid="stSlider"] [role="slider"] {
     height: 1.2rem !important;
 }
 div[data-testid="stSlider"] { padding-top: 0.35rem !important; padding-bottom: 0.65rem !important; }
+div[data-testid="stTickBarMin"],
+div[data-testid="stTickBarMax"] {
+    font-size: 0.72rem !important;
+    color: var(--muted) !important;
+    font-weight: 500 !important;
+}
+
+/* Budget block */
+.budget-block {
+    background: var(--bg2);
+    border: 1px solid var(--line);
+    border-radius: 18px;
+    padding: 1.2rem 1.1rem 1.05rem;
+    margin: 0 0 1.15rem;
+    box-shadow: var(--sx);
+}
+.budget-title {
+    font-family: 'Fraunces', Georgia, serif !important;
+    font-size: 1.05rem;
+    font-weight: 600;
+    color: var(--ink);
+    margin: 0 0 0.3rem;
+}
+.budget-help {
+    font-size: 0.84rem;
+    color: var(--muted);
+    margin: 0 0 1.1rem;
+    line-height: 1.5;
+}
+.budget-sub {
+    font-size: 0.88rem;
+    font-weight: 600;
+    color: var(--ink);
+    margin: 0.85rem 0 0.35rem;
+    letter-spacing: -0.01em;
+}
+.budget-sub:first-of-type { margin-top: 0.15rem; }
+.budget-readout {
+    font-size: 0.8rem;
+    font-weight: 500;
+    color: var(--sage-deep);
+    background: var(--sage-soft);
+    border: 1px solid var(--sage-line);
+    border-radius: 999px;
+    padding: 0.35rem 0.75rem;
+    display: inline-block;
+    margin: 0.35rem 0 0.65rem;
+}
 
 /* Buttons */
 .stButton > button {
@@ -450,8 +498,8 @@ div[data-testid="stSlider"] { padding-top: 0.35rem !important; padding-bottom: 0
     background: var(--white);
     border: 1px solid var(--line);
     border-radius: 20px;
-    padding: 2.15rem 2.15rem 1.9rem;
-    margin-bottom: 2rem;
+    padding: 2.35rem 2.25rem 2rem;
+    margin-bottom: 2.35rem;
     box-shadow: var(--md);
     transition: transform 0.22s ease, box-shadow 0.22s ease;
 }
@@ -889,6 +937,95 @@ def remove_chip(action: str, value: Any = None) -> None:
     st.session_state.applied_filters = f
 
 
+def _snap_to_step(value: int, options: list[int]) -> int:
+    """Nearest option value for clean select controls."""
+    return min(options, key=lambda o: abs(o - int(value)))
+
+
+def render_budget_controls(applied: dict, draft: dict) -> None:
+    """
+    Clean budget UI — no dual-thumb range sliders (those render messy double ranges).
+    Two labeled costs, each with Minimum / Maximum selectboxes.
+    """
+    st.sidebar.markdown(
+        """
+        <div class="budget-block">
+            <p class="budget-title">Budget</p>
+            <p class="budget-help">These are facility estimates only. Your insurance will change what you actually pay.</p>
+        </div>
+        """,
+        unsafe_allow_html=True,
+    )
+
+    vag_opts = list(range(4000, 26000, 1000))
+    cs_opts = list(range(5000, 31000, 1000))
+
+    # ── Vaginal ──
+    st.sidebar.markdown(
+        '<p class="budget-sub">Estimated vaginal delivery cost</p>',
+        unsafe_allow_html=True,
+    )
+    v_min_default = _snap_to_step(applied.get("price_min", 4000), vag_opts)
+    v_max_default = _snap_to_step(applied.get("price_max", 25000), vag_opts)
+    vc1, vc2 = st.sidebar.columns(2)
+    with vc1:
+        v_min = st.selectbox(
+            "Minimum",
+            vag_opts,
+            index=vag_opts.index(v_min_default),
+            format_func=lambda x: f"${x:,}",
+            key="budget_vag_min",
+        )
+    with vc2:
+        v_max = st.selectbox(
+            "Maximum",
+            vag_opts,
+            index=vag_opts.index(v_max_default),
+            format_func=lambda x: f"${x:,}",
+            key="budget_vag_max",
+        )
+    if v_min > v_max:
+        v_min, v_max = v_max, v_min
+    draft["price_min"], draft["price_max"] = int(v_min), int(v_max)
+    st.sidebar.markdown(
+        f'<span class="budget-readout">Vaginal: ${v_min:,} – ${v_max:,}</span>',
+        unsafe_allow_html=True,
+    )
+
+    # ── C-section ──
+    st.sidebar.markdown(
+        '<p class="budget-sub">Estimated C-section cost</p>',
+        unsafe_allow_html=True,
+    )
+    c_min_default = _snap_to_step(applied.get("csection_price_min", 5000), cs_opts)
+    c_max_default = _snap_to_step(applied.get("csection_price_max", 30000), cs_opts)
+    cc1, cc2 = st.sidebar.columns(2)
+    with cc1:
+        c_min = st.selectbox(
+            "Minimum ",
+            cs_opts,
+            index=cs_opts.index(c_min_default),
+            format_func=lambda x: f"${x:,}",
+            key="budget_cs_min",
+            help="Birth centers without C-section pricing still appear in results.",
+        )
+    with cc2:
+        c_max = st.selectbox(
+            "Maximum ",
+            cs_opts,
+            index=cs_opts.index(c_max_default),
+            format_func=lambda x: f"${x:,}",
+            key="budget_cs_max",
+        )
+    if c_min > c_max:
+        c_min, c_max = c_max, c_min
+    draft["csection_price_min"], draft["csection_price_max"] = int(c_min), int(c_max)
+    st.sidebar.markdown(
+        f'<span class="budget-readout">C-section: ${c_min:,} – ${c_max:,}</span>',
+        unsafe_allow_html=True,
+    )
+
+
 def render_header(total: int, saved: int) -> None:
     st.markdown(
         f"""
@@ -1053,30 +1190,7 @@ def render_sidebar() -> None:
         placeholder="Optional",
     )
 
-    st.sidebar.markdown(
-        '<div class="fg"><p class="fg-t">Budget</p>'
-        '<p class="fg-h">Facility estimates only — insurance changes your share.</p></div>',
-        unsafe_allow_html=True,
-    )
-    v_price = st.sidebar.slider(
-        "Estimated vaginal delivery cost",
-        4000, 25000,
-        (int(applied.get("price_min", 4000)), int(applied.get("price_max", 25000))),
-        step=500,
-        format="$%d",
-        help="Illustrative facility charge range before insurance.",
-    )
-    draft["price_min"], draft["price_max"] = v_price
-
-    cs_price = st.sidebar.slider(
-        "Estimated C-section cost",
-        5000, 30000,
-        (int(applied.get("csection_price_min", 5000)), int(applied.get("csection_price_max", 30000))),
-        step=500,
-        format="$%d",
-        help="Birth centers without C-section on site still appear.",
-    )
-    draft["csection_price_min"], draft["csection_price_max"] = cs_price
+    render_budget_controls(applied, draft)
 
     draft["insurance"] = st.sidebar.multiselect(
         "Insurance to keep in mind",
@@ -1110,6 +1224,9 @@ def render_sidebar() -> None:
         if st.button("Reset", use_container_width=True):
             st.session_state.applied_filters = copy.deepcopy(DEFAULT_FILTERS)
             st.session_state.search_query = ""
+            # Clear budget widget keys so controls re-init cleanly
+            for k in ("budget_vag_min", "budget_vag_max", "budget_cs_min", "budget_cs_max"):
+                st.session_state.pop(k, None)
             st.rerun()
 
 
