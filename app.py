@@ -720,62 +720,6 @@ section.main .stTextInput input::placeholder {
     line-height: 1.45;
 }
 
-/* Nav legend — separate chips so labels don’t run together */
-.nav-legend {
-    background: var(--white);
-    border: 1px solid var(--line);
-    border-radius: 16px;
-    padding: 0.85rem 1rem;
-    margin: 0 0 0.85rem;
-    box-shadow: var(--sx);
-}
-.nav-legend-title {
-    font-size: 0.7rem;
-    font-weight: 600;
-    letter-spacing: 0.1em;
-    text-transform: uppercase;
-    color: var(--muted);
-    margin: 0 0 0.65rem;
-}
-.nav-chips {
-    display: flex;
-    flex-wrap: wrap;
-    gap: 0.5rem;
-}
-.nav-chip {
-    display: inline-flex;
-    flex-direction: column;
-    gap: 0.12rem;
-    background: var(--bg);
-    border: 1px solid var(--line);
-    border-radius: 12px;
-    padding: 0.55rem 0.85rem;
-    min-width: 5.5rem;
-}
-.nav-chip .nav-chip-name {
-    font-size: 0.88rem;
-    font-weight: 650;
-    color: var(--ink);
-    letter-spacing: -0.01em;
-}
-.nav-chip .nav-chip-desc {
-    font-size: 0.75rem;
-    font-weight: 400;
-    color: var(--muted);
-    line-height: 1.35;
-}
-.nav-chip.highlight {
-    background: var(--sage-soft);
-    border-color: var(--sage-line);
-}
-.nav-chip.highlight .nav-chip-name { color: var(--sage-deep); }
-@media (max-width: 768px) {
-    .nav-chip {
-        flex: 1 1 calc(50% - 0.5rem);
-        min-width: 0;
-    }
-}
-
 /* Quick stats under results header */
 .stats-bar {
     display: flex;
