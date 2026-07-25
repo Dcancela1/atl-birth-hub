@@ -36,7 +36,8 @@ st.set_page_config(
     page_title="Atlanta Birth Hub",
     page_icon="🌸",
     layout="wide",
-    initial_sidebar_state="expanded",
+    # Collapsed by default so phones open cleanly; desktop users can open Filters
+    initial_sidebar_state="collapsed",
 )
 
 # ═══════════════════════════════════════════════════════════════════════════
@@ -215,10 +216,59 @@ div[data-testid="stVerticalBlockBorderWrapper"] {
 section[data-testid="stSidebar"] {
     background: var(--white) !important;
     border-right: 1px solid var(--line) !important;
+    padding-top: 0 !important;
 }
+/* Kill huge empty band Streamlit reserves at the top of the open sidebar */
 section[data-testid="stSidebar"] > div:first-child {
-    padding: 2rem 1.35rem 3.5rem !important;
+    padding: 0.65rem 1.1rem 2.5rem !important;
     background: var(--white) !important;
+}
+[data-testid="stSidebarHeader"] {
+    min-height: 0 !important;
+    height: auto !important;
+    padding: 0.35rem 0.25rem 0.15rem !important;
+    margin: 0 !important;
+    background: transparent !important;
+}
+[data-testid="stSidebarHeader"] * {
+    margin: 0 !important;
+}
+[data-testid="stSidebarNav"] {
+    min-height: 0 !important;
+    padding: 0 !important;
+}
+/* Collapse / open control — don't float over hero copy */
+[data-testid="collapsedControl"],
+[data-testid="stSidebarCollapseButton"],
+button[kind="header"] {
+    z-index: 1000 !important;
+}
+[data-testid="collapsedControl"] {
+    position: fixed !important;
+    top: 0.65rem !important;
+    left: 0.65rem !important;
+    background: var(--white) !important;
+    border: 1px solid var(--line) !important;
+    border-radius: 12px !important;
+    box-shadow: var(--sm) !important;
+    padding: 0.4rem 0.55rem !important;
+    width: auto !important;
+    height: auto !important;
+}
+[data-testid="collapsedControl"] svg,
+[data-testid="stSidebarCollapseButton"] svg {
+    color: var(--ink) !important;
+    stroke: var(--ink) !important;
+}
+/* Small “Filters” cue next to the hamburger when closed */
+[data-testid="collapsedControl"]::after {
+    content: "Filters";
+    font-family: 'Inter', system-ui, sans-serif;
+    font-size: 0.78rem;
+    font-weight: 600;
+    color: var(--ink2);
+    margin-left: 0.35rem;
+    letter-spacing: 0.01em;
 }
 section[data-testid="stSidebar"] label {
     font-size: 0.9rem !important;
@@ -239,20 +289,24 @@ section[data-testid="stSidebar"] div[data-testid="stVerticalBlock"] > div {
     padding-bottom: 0.15rem;
 }
 
-.sb-h { margin-bottom: 1.75rem; padding-bottom: 1.25rem; border-bottom: 1px solid var(--line2); }
+.sb-h {
+    margin: 0 0 1rem;
+    padding: 0.15rem 0 0.9rem;
+    border-bottom: 1px solid var(--line2);
+}
 .sb-t {
     font-family: 'Fraunces', Georgia, serif !important;
-    font-size: 1.35rem;
+    font-size: 1.2rem;
     font-weight: 600;
     color: var(--ink);
-    margin: 0 0 0.45rem;
+    margin: 0 0 0.3rem;
     letter-spacing: -0.025em;
 }
 .sb-s {
-    font-size: 0.9rem;
+    font-size: 0.86rem;
     color: var(--muted);
     margin: 0;
-    line-height: 1.55;
+    line-height: 1.5;
 }
 
 .chips {
@@ -842,9 +896,29 @@ div[data-testid="stAlert"] {
 section[data-testid="stSidebar"] .stButton { margin-top: 0.25rem; }
 
 @media (max-width: 768px) {
-    .abh-hero { padding: 2.15rem 1.5rem; border-radius: 20px; }
+    /* Room for the floating Filters control so it never sits on hero copy */
+    .block-container {
+        padding: 3.6rem 0.9rem 4rem !important;
+    }
+    section[data-testid="stSidebar"] > div:first-child {
+        padding: 0.4rem 0.95rem 2rem !important;
+    }
+    [data-testid="stSidebarHeader"] {
+        min-height: 0 !important;
+        padding: 0.25rem 0.15rem !important;
+    }
+    .sb-h {
+        margin-top: 0 !important;
+        margin-bottom: 0.75rem !important;
+        padding-bottom: 0.75rem !important;
+    }
+    .abh-hero {
+        padding: 2rem 1.35rem;
+        border-radius: 18px;
+        margin-bottom: 1.5rem;
+    }
     .abh-h1 { font-size: 1.85rem; max-width: none; }
-    .abh-h { padding: 1.5rem 1.4rem; }
+    .abh-h { padding: 1.35rem 1.25rem; margin-bottom: 1.25rem; }
     .fc { padding: 1.5rem 1.4rem; margin-bottom: 1.5rem; border-radius: 18px; }
     .fc-name { font-size: 1.25rem; }
     .fc-row { flex-direction: column; gap: 1.1rem; }
@@ -859,7 +933,6 @@ section[data-testid="stSidebar"] .stButton { margin-top: 0.25rem; }
     .fc-cost { gap: 1.35rem; padding: 1.1rem 1.2rem; }
     .rh-t { font-size: 1.3rem; }
     .stTabs [data-baseweb="tab"] { padding: 0.65rem 0.9rem !important; font-size: 0.84rem !important; }
-    .block-container { padding: 1.35rem 0.9rem 4rem !important; }
 }
 </style>
 """
