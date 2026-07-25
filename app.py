@@ -7,6 +7,7 @@ All data, filters, map, resources, and save/compare preserved.
 from __future__ import annotations
 
 import copy
+import html
 from datetime import datetime
 from typing import Any
 
@@ -628,9 +629,30 @@ section.main .stTextInput input::placeholder {
     font-style: italic;
 }
 
+/* Quick stats under results header */
+.stats-bar {
+    display: flex;
+    flex-wrap: wrap;
+    gap: 0.65rem;
+    margin: 0 0 1.25rem;
+}
+.stats-bar .stat {
+    font-size: 0.84rem;
+    color: var(--ink2);
+    background: var(--white);
+    border: 1px solid var(--line);
+    border-radius: 999px;
+    padding: 0.4rem 0.95rem;
+    box-shadow: var(--sx);
+}
+.stats-bar .stat strong {
+    color: var(--ink);
+    font-weight: 600;
+}
+
 /* Results header */
 .rh {
-    margin: 0.15rem 0 2rem;
+    margin: 0.15rem 0 1.35rem;
     padding-bottom: 1.4rem;
     border-bottom: 1px solid var(--line);
 }
@@ -867,6 +889,9 @@ def get_facilities() -> pd.DataFrame:
     return load_facilities()
 
 
+PAGE_SIZE = 12
+
+
 def init_state() -> None:
     if "applied_filters" not in st.session_state:
         st.session_state.applied_filters = copy.deepcopy(DEFAULT_FILTERS)
@@ -874,6 +899,17 @@ def init_state() -> None:
         st.session_state.saved_ids = []
     if "search_query" not in st.session_state:
         st.session_state.search_query = ""
+    if "results_page" not in st.session_state:
+        st.session_state.results_page = 0
+    if "sort_by" not in st.session_state:
+        st.session_state.sort_by = "Highest quality"
+
+
+def esc(value: Any) -> str:
+    """Escape text for safe HTML injection in cards."""
+    if value is None or (isinstance(value, float) and pd.isna(value)):
+        return "—"
+    return html.escape(str(value), quote=True)
 
 
 def is_saved(fid: str) -> bool:
@@ -1117,20 +1153,14 @@ def render_sidebar() -> None:
 
     chips = chip_specs(applied)
     if chips:
-        labels = " ".join(f'<span class="chip">{c["label"]}</span>' for c in chips[:10])
+        labels = " ".join(
+            f'<span class="chip">{esc(c["label"])}</span>' for c in chips[:12]
+        )
         st.sidebar.markdown(
-            f'<div class="chips"><div class="chips-l">Active filters</div>{labels}</div>',
+            f'<div class="chips"><div class="chips-l">Currently applied</div>{labels}</div>',
             unsafe_allow_html=True,
         )
-        st.sidebar.caption("Tap to remove:")
-        n = min(len(chips), 4)
-        cols = st.sidebar.columns(n)
-        for i, chip in enumerate(chips[:8]):
-            with cols[i % n]:
-                short = chip["label"][:12] + ("…" if len(chip["label"]) > 12 else "")
-                if st.button(f"× {short}", key=f"rm_{i}_{chip['action']}_{chip['value']}", use_container_width=True):
-                    remove_chip(chip["action"], chip["value"])
-                    st.rerun()
+        st.sidebar.caption("Change options below and tap Apply — or Reset to clear everything.")
 
     st.sidebar.markdown(
         '<div class="fg"><p class="fg-t">Location</p>'
@@ -1229,12 +1259,13 @@ def render_sidebar() -> None:
     with c1:
         if st.button("Apply filters", type="primary", use_container_width=True):
             st.session_state.applied_filters = draft
+            st.session_state.results_page = 0
             st.rerun()
     with c2:
         if st.button("Reset", use_container_width=True):
             st.session_state.applied_filters = copy.deepcopy(DEFAULT_FILTERS)
             st.session_state.search_query = ""
-            # Clear budget widget keys so controls re-init cleanly
+            st.session_state.results_page = 0
             for k in ("budget_vag_min", "budget_vag_max", "budget_cs_min", "budget_cs_max"):
                 st.session_state.pop(k, None)
             st.rerun()
@@ -1255,7 +1286,7 @@ def render_card(row: pd.Series, key_prefix: str = "search") -> None:
     services = row.get("services", [])
     if isinstance(services, str):
         services = [s for s in services.split("|") if s]
-    tags = "".join(f'<span class="fc-tag">{s}</span>' for s in services[:5])
+    tags = "".join(f'<span class="fc-tag">{esc(s)}</span>' for s in services[:5])
     highlight = row.get("key_strength") or row.get("quality_label") or ""
     ftype = row.get("type", "Hospital")
 
@@ -1264,9 +1295,9 @@ def render_card(row: pd.Series, key_prefix: str = "search") -> None:
         <div class="fc">
             <div class="fc-row">
                 <div>
-                    <p class="fc-name">{row['name']}</p>
-                    <p class="fc-meta">{meta}</p>
-                    <span class="fc-type">{ftype}</span>
+                    <p class="fc-name">{esc(row['name'])}</p>
+                    <p class="fc-meta">{esc(meta)}</p>
+                    <span class="fc-type">{esc(ftype)}</span>
                 </div>
                 <div class="fc-score {tier}">
                     <span class="n">{score}</span>
@@ -1277,14 +1308,14 @@ def render_card(row: pd.Series, key_prefix: str = "search") -> None:
             <div class="fc-cost">
                 <div class="ci">
                     <strong>Vaginal estimate</strong>
-                    <span>{row.get('vaginal_cost_display', '—')}</span>
+                    <span>{esc(row.get('vaginal_cost_display', '—'))}</span>
                 </div>
                 <div class="ci">
                     <strong>C-section estimate</strong>
-                    <span>{row.get('csection_cost_display', '—')}</span>
+                    <span>{esc(row.get('csection_cost_display', '—'))}</span>
                 </div>
             </div>
-            <p class="fc-blurb">{highlight}</p>
+            <p class="fc-blurb">{esc(highlight)}</p>
         </div>
         """,
         unsafe_allow_html=True,
@@ -1313,12 +1344,32 @@ def render_card(row: pd.Series, key_prefix: str = "search") -> None:
                 st.caption(str(row["address"]))
 
 
+def render_result_stats(df: pd.DataFrame) -> None:
+    """Compact summary of the current result set."""
+    if df.empty:
+        return
+    n_hosp = int((df["type"] == "Hospital").sum()) if "type" in df.columns else len(df)
+    n_bc = int((df["type"] == "Birth Center").sum()) if "type" in df.columns else 0
+    avg_q = df["quality_score"].mean() if "quality_score" in df.columns else None
+    avg_txt = f"{avg_q:.0f}" if avg_q is not None and pd.notna(avg_q) else "—"
+    st.markdown(
+        f"""
+        <div class="stats-bar">
+            <span class="stat"><strong>{n_hosp}</strong> hospitals</span>
+            <span class="stat"><strong>{n_bc}</strong> birth centers</span>
+            <span class="stat">Avg quality <strong>{avg_txt}</strong></span>
+        </div>
+        """,
+        unsafe_allow_html=True,
+    )
+
+
 def render_search(df: pd.DataFrame) -> None:
     st.markdown(
         f"""
         <div class="rh">
             <p class="rh-t"><em>{len(df)}</em> places for you to explore</p>
-            <p class="rh-s">Highest quality first — change sort anytime</p>
+            <p class="rh-s">Showing a calm page of results — sort or page as you like</p>
         </div>
         """,
         unsafe_allow_html=True,
@@ -1332,10 +1383,15 @@ def render_search(df: pd.DataFrame) -> None:
         )
         return
 
+    render_result_stats(df)
+
+    sort_options = ["Highest quality", "Lowest cost", "Nearest", "A–Z"]
+    if st.session_state.get("sort_by") not in sort_options:
+        st.session_state.sort_by = "Highest quality"
     sort = st.selectbox(
         "Sort results",
-        ["Highest quality", "Lowest cost", "Nearest", "A–Z"],
-        index=0,
+        sort_options,
+        key="sort_by",
     )
     out = df.copy()
     if sort == "Highest quality":
@@ -1347,8 +1403,37 @@ def render_search(df: pd.DataFrame) -> None:
     else:
         out = out.sort_values("name")
 
-    for _, row in out.iterrows():
-        render_card(row, key_prefix="search")
+    total = len(out)
+    total_pages = max(1, (total + PAGE_SIZE - 1) // PAGE_SIZE)
+    page = int(st.session_state.results_page)
+    page = max(0, min(page, total_pages - 1))
+    st.session_state.results_page = page
+
+    start = page * PAGE_SIZE
+    end = min(start + PAGE_SIZE, total)
+    page_df = out.iloc[start:end]
+
+    st.caption(f"Showing {start + 1}–{end} of {total}")
+
+    for _, row in page_df.iterrows():
+        render_card(row, key_prefix=f"search_p{page}")
+
+    if total_pages > 1:
+        p1, p2, p3 = st.columns([1, 2, 1])
+        with p1:
+            if st.button("← Previous", disabled=page <= 0, use_container_width=True, key="page_prev"):
+                st.session_state.results_page = page - 1
+                st.rerun()
+        with p2:
+            st.markdown(
+                f'<p style="text-align:center;color:#8A837C;margin:0.6rem 0;">'
+                f"Page {page + 1} of {total_pages}</p>",
+                unsafe_allow_html=True,
+            )
+        with p3:
+            if st.button("Next →", disabled=page >= total_pages - 1, use_container_width=True, key="page_next"):
+                st.session_state.results_page = page + 1
+                st.rerun()
 
 
 def render_map(df: pd.DataFrame) -> None:
@@ -1430,15 +1515,47 @@ def render_saved(all_df: pd.DataFrame) -> None:
         )
         return
 
+    # Preserve user's save order
+    order = {fid: i for i, fid in enumerate(st.session_state.saved_ids)}
+    saved = saved.copy()
+    saved["_ord"] = saved["facility_id"].map(lambda x: order.get(x, 999))
+    saved = saved.sort_values("_ord")
+
     st.markdown(
         f"""
         <div class="rh">
             <p class="rh-t"><em>{len(saved)}</em> saved for you</p>
-            <p class="rh-s">Compare side by side anytime this session</p>
+            <p class="rh-s">Compare side by side — scores and costs at a glance</p>
         </div>
         """,
         unsafe_allow_html=True,
     )
+
+    # Quick compare table for 2+ saves
+    if len(saved) >= 2:
+        compare_rows = []
+        for _, row in saved.iterrows():
+            compare_rows.append({
+                "Facility": row["name"],
+                "Type": row.get("type", "—"),
+                "Region": row.get("region", "—"),
+                "Quality": int(row.get("quality_score", 0)),
+                "Vaginal est.": row.get("vaginal_cost_display", "—"),
+                "C-section est.": row.get("csection_cost_display", "—"),
+            })
+        st.dataframe(
+            pd.DataFrame(compare_rows),
+            use_container_width=True,
+            hide_index=True,
+        )
+        st.caption("Tip: open View details on a card for strengths and what to consider.")
+
+    c_clear, _ = st.columns([1, 2])
+    with c_clear:
+        if st.button("Clear all saved", use_container_width=True, key="clear_all_saved"):
+            st.session_state.saved_ids = []
+            st.rerun()
+
     for _, row in saved.iterrows():
         render_card(row, key_prefix="saved")
 
@@ -1477,12 +1594,16 @@ def main() -> None:
     render_methodology()
     render_gentle_note()
 
+    prev_q = st.session_state.search_query
     st.session_state.search_query = st.text_input(
         "Find a hospital or birth center",
         value=st.session_state.search_query,
         placeholder="Type a name, city, or region — e.g. Northside, Savannah…",
         help="Narrows the list as you type. Use the left sidebar for region, quality, and budget filters.",
     )
+    # Reset to first page when the search text changes
+    if st.session_state.search_query != prev_q:
+        st.session_state.results_page = 0
 
     filters = copy.deepcopy(st.session_state.applied_filters)
     filters["search_query"] = st.session_state.search_query
@@ -1495,10 +1616,15 @@ def main() -> None:
             zip_clean = DEFAULT_ZIP
 
     filtered = apply_filters(facilities, filters, user_zip=zip_clean)
+    n_saved = len(st.session_state.saved_ids)
+    n_res = len(load_resources())
 
-    t_search, t_map, t_resources, t_saved = st.tabs(
-        ["Search", "Map", "Resources", "Saved"]
-    )
+    t_search, t_map, t_resources, t_saved = st.tabs([
+        f"Search ({len(filtered)})",
+        "Map",
+        f"Resources ({n_res})",
+        f"Saved ({n_saved})",
+    ])
     with t_search:
         render_search(filtered)
     with t_map:
