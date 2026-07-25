@@ -593,6 +593,15 @@ def apply_filters(df: pd.DataFrame, filters: dict, user_zip: str | None = None) 
         | ((result["vaginal_cost"] >= pmin) & (result["vaginal_cost"] <= pmax))
     ]
 
+    cs_min = filters.get("csection_price_min", 0)
+    cs_max = filters.get("csection_price_max", 999999)
+    # Birth centers with no C-section cost still pass if they match other filters
+    has_cs = result["csection_cost"].notna()
+    result = result[
+        ~has_cs
+        | ((result["csection_cost"] >= cs_min) & (result["csection_cost"] <= cs_max))
+    ]
+
     ins = filters.get("insurance") or []
     if ins:
         result = result[

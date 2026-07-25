@@ -48,10 +48,10 @@ QUALITY_METRIC_OPTIONS = [
 ]
 
 QUALITY_SCORE_OPTIONS = {
-    "Any score": 0,
-    "70+": 70,
-    "80+": 80,
-    "90+": 90,
+    "Any quality score": 0,
+    "Good and above (70+)": 70,
+    "Strong and above (80+)": 80,
+    "Excellent only (90+)": 90,
 }
 
 COUNTY_TO_REGION: dict[str, str] = {
@@ -102,6 +102,8 @@ DEFAULT_FILTERS: dict = {
     "services": [],
     "price_min": 4000,
     "price_max": 25000,
+    "csection_price_min": 5000,
+    "csection_price_max": 30000,
     "insurance": [],
     "min_births_per_year": 0,
     "min_years_operation": 0,
