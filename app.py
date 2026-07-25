@@ -702,8 +702,61 @@ section.main .stTextInput input::placeholder {
     font-size: 1rem;
     color: var(--ink2);
     line-height: 1.6;
-    margin: 0.55rem 0 0;
+    margin: 0.55rem 0 0.85rem;
     font-style: italic;
+}
+.fc-phone {
+    display: flex;
+    align-items: center;
+    gap: 0.75rem;
+    background: var(--sage-soft);
+    border: 1px solid var(--sage-line);
+    border-radius: 14px;
+    padding: 0.85rem 1.1rem;
+    margin: 0.25rem 0 0.15rem;
+}
+.fc-phone .ico {
+    font-size: 1.15rem;
+    line-height: 1;
+}
+.fc-phone .lbl {
+    font-size: 0.7rem;
+    font-weight: 600;
+    text-transform: uppercase;
+    letter-spacing: 0.07em;
+    color: var(--sage-deep);
+    margin: 0 0 0.15rem;
+}
+.fc-phone a {
+    font-size: 1.08rem;
+    font-weight: 600;
+    color: var(--ink);
+    text-decoration: none;
+    letter-spacing: -0.01em;
+}
+.fc-phone a:hover { color: var(--sage-deep); text-decoration: underline; }
+.fc-phone .hint {
+    font-size: 0.78rem;
+    color: var(--muted);
+    margin: 0.15rem 0 0;
+}
+
+/* Nav guide under main tabs */
+.nav-guide {
+    background: var(--white);
+    border: 1px solid var(--line);
+    border-radius: 16px;
+    padding: 0.95rem 1.2rem;
+    margin: -0.5rem 0 1.5rem;
+    box-shadow: var(--sx);
+    font-size: 0.9rem;
+    color: var(--ink2);
+    line-height: 1.55;
+}
+.nav-guide strong { color: var(--ink); font-weight: 600; }
+.nav-guide span.sep {
+    color: var(--line);
+    margin: 0 0.35rem;
 }
 
 /* Quick stats under results header */
@@ -1395,6 +1448,23 @@ def render_card(row: pd.Series, key_prefix: str = "search") -> None:
     highlight = row.get("key_strength") or row.get("quality_label") or ""
     ftype = row.get("type", "Hospital")
 
+    phone_raw = row.get("phone")
+    phone_html = ""
+    if phone_raw is not None and str(phone_raw).strip() and str(phone_raw).lower() not in ("nan", "none"):
+        phone_display = str(phone_raw).strip()
+        phone_digits = "".join(c for c in phone_display if c.isdigit() or c == "+")
+        if phone_digits:
+            phone_html = f"""
+            <div class="fc-phone">
+                <span class="ico">📞</span>
+                <div>
+                    <p class="lbl">Call about pricing & tours</p>
+                    <a href="tel:{esc(phone_digits)}">{esc(phone_display)}</a>
+                    <p class="hint">Ask billing for a Good Faith Estimate with your insurance</p>
+                </div>
+            </div>
+            """
+
     st.markdown(
         f"""
         <div class="fc">
@@ -1421,6 +1491,7 @@ def render_card(row: pd.Series, key_prefix: str = "search") -> None:
                 </div>
             </div>
             <p class="fc-blurb">{esc(highlight)}</p>
+            {phone_html}
         </div>
         """,
         unsafe_allow_html=True,
@@ -1447,6 +1518,9 @@ def render_card(row: pd.Series, key_prefix: str = "search") -> None:
             )
             if pd.notna(row.get("address")):
                 st.caption(str(row["address"]))
+            phone = row.get("phone")
+            if phone is not None and str(phone).strip() and str(phone).lower() not in ("nan", "none"):
+                st.markdown(f"**Phone:** {phone}")
 
 
 def render_result_stats(df: pd.DataFrame) -> None:
@@ -1519,7 +1593,6 @@ def render_search(df: pd.DataFrame) -> None:
     page_df = out.iloc[start:end]
 
     st.caption(f"Showing {start + 1}–{end} of {total}")
-    st.caption("Need classes, postpartum support, or feeding help? Open the **Resources** tab above.")
 
     for _, row in page_df.iterrows():
         render_card(row, key_prefix=f"search_p{page}")
@@ -1656,6 +1729,7 @@ def render_saved(all_df: pd.DataFrame) -> None:
                 "Quality": int(row.get("quality_score", 0)),
                 "Vaginal est.": row.get("vaginal_cost_display", "—"),
                 "C-section est.": row.get("csection_cost_display", "—"),
+                "Phone": row.get("phone") if pd.notna(row.get("phone")) else "—",
             })
         st.dataframe(
             pd.DataFrame(compare_rows),
@@ -1732,7 +1806,7 @@ def main() -> None:
     filtered = apply_filters(facilities, filters, user_zip=zip_clean)
     n_saved = len(st.session_state.saved_ids)
 
-    # Primary journey: Explore places → Map → Resources (support) → Saved
+    # Primary journey: Explore → Map → Resources → Saved
     saved_label = f"Saved · {n_saved}" if n_saved else "Saved"
     t_explore, t_map, t_resources, t_saved = st.tabs([
         "Explore",
@@ -1740,13 +1814,35 @@ def main() -> None:
         "Resources",
         saved_label,
     ])
+
+    def render_nav_guide() -> None:
+        """Sits at the top of each tab — directly under the Explore/Map/Resources/Saved tiles."""
+        st.markdown(
+            """
+            <div class="nav-guide">
+                <strong>Explore</strong> places
+                <span class="sep">·</span>
+                <strong>Map</strong> them
+                <span class="sep">·</span>
+                <strong>Resources</strong> for classes, postpartum &amp; feeding support
+                <span class="sep">·</span>
+                <strong>Saved</strong> shortlist
+            </div>
+            """,
+            unsafe_allow_html=True,
+        )
+
     with t_explore:
+        render_nav_guide()
         render_search(filtered)
     with t_map:
+        render_nav_guide()
         render_map(filtered)
     with t_resources:
+        render_nav_guide()
         render_resources()
     with t_saved:
+        render_nav_guide()
         render_saved(facilities)
 
     render_footer(total)
