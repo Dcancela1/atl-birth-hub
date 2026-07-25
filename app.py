@@ -1519,6 +1519,7 @@ def render_search(df: pd.DataFrame) -> None:
     page_df = out.iloc[start:end]
 
     st.caption(f"Showing {start + 1}–{end} of {total}")
+    st.caption("Need classes, postpartum support, or feeding help? Open the **Resources** tab above.")
 
     for _, row in page_df.iterrows():
         render_card(row, key_prefix=f"search_p{page}")
@@ -1585,8 +1586,16 @@ def render_map(df: pd.DataFrame) -> None:
 
 def render_resources() -> None:
     st.markdown(
-        '<p class="res-intro">Support beyond the hospital walls — education, '
-        "postpartum care, feeding, and community resources across Georgia.</p>",
+        """
+        <div class="rh">
+            <p class="rh-t">Resources & support</p>
+            <p class="rh-s">Classes, postpartum care, feeding help, and community — beyond the hospital walls</p>
+        </div>
+        <p class="res-intro">
+            You don’t have to figure everything out alone. These are trusted Georgia-focused links
+            for education, mental health, lactation, insurance basics, and community support.
+        </p>
+        """,
         unsafe_allow_html=True,
     )
     resources = load_resources()
@@ -1723,15 +1732,15 @@ def main() -> None:
     filtered = apply_filters(facilities, filters, user_zip=zip_clean)
     n_saved = len(st.session_state.saved_ids)
 
-    # Clear nav labels — result count lives in the Explore header, not every tab name
+    # Primary journey: Explore places → Map → Resources (support) → Saved
     saved_label = f"Saved · {n_saved}" if n_saved else "Saved"
-    t_search, t_map, t_resources, t_saved = st.tabs([
+    t_explore, t_map, t_resources, t_saved = st.tabs([
         "Explore",
         "Map",
-        "Guides",
+        "Resources",
         saved_label,
     ])
-    with t_search:
+    with t_explore:
         render_search(filtered)
     with t_map:
         render_map(filtered)
