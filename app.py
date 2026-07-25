@@ -1,5 +1,6 @@
 """
-Atlanta Birth Hub — Aggressive maximum polish (Airbnb-clean, mother-soft).
+Atlanta Birth Hub — GENIUS MODE visual overhaul.
+Calm Airbnb-grade hierarchy, softer blush accents.
 All data, filters, map, resources, and save/compare preserved.
 """
 
@@ -38,47 +39,43 @@ st.set_page_config(
 )
 
 # ═══════════════════════════════════════════════════════════════════════════
-# AGGRESSIVE THEME — kill Streamlit defaults
+# MAXIMUM CSS — override Streamlit as hard as the framework allows
 # ═══════════════════════════════════════════════════════════════════════════
-CSS = """
+CSS = r"""
 <style>
 @import url('https://fonts.googleapis.com/css2?family=Inter:wght@400;500;600;700&family=Fraunces:opsz,wght@9..144,500;9..144,600;9..144,700&display=swap');
 
 :root {
-    --bg: #F9F6F2;
-    --bg-elevated: #FFFCFA;
+    --bg: #F8F5F1;
+    --bg2: #FBF9F6;
     --white: #FFFFFF;
-    --blush: #D4A08F;
-    --blush-soft: #F7EDE8;
-    --blush-mid: #E8C9BC;
-    --blush-deep: #C48976;
+    --blush: #C99A8A;
+    --blush-hover: #B88676;
+    --blush-soft: #F8F0EC;
+    --blush-line: #E5CFC5;
     --sage: #7A9E8E;
-    --sage-soft: #EBF3EF;
-    --sage-mid: #C8DCD2;
-    --sage-deep: #5A7D6E;
-    --ink: #2C2C2C;
-    --ink-soft: #5C5652;
+    --sage-soft: #EAF3EF;
+    --sage-line: #C9DDD3;
+    --sage-deep: #54786A;
+    --ink: #1F1F1F;
+    --ink2: #4A4541;
     --muted: #8A837C;
-    --line: #EBE5DD;
-    --line-soft: #F2EDE6;
-    --shadow-xs: 0 1px 2px rgba(44,44,44,0.04);
-    --shadow-sm: 0 2px 8px rgba(44,44,44,0.04), 0 1px 2px rgba(44,44,44,0.03);
-    --shadow-md: 0 8px 24px rgba(44,44,44,0.06), 0 2px 6px rgba(44,44,44,0.03);
-    --shadow-lg: 0 20px 50px rgba(44,44,44,0.08), 0 4px 12px rgba(44,44,44,0.04);
-    --r: 18px;
-    --r-sm: 14px;
-    --r-pill: 999px;
-    --excellent-bg: #E8F4EC;
-    --excellent-fg: #2F6B48;
-    --strong-bg: #EAF0F6;
-    --strong-fg: #355A7A;
-    --good-bg: #F8F1E6;
-    --good-fg: #8B6424;
+    --line: #E8E2D9;
+    --line2: #F0EBE4;
+    --sx: 0 1px 2px rgba(31,31,31,0.04);
+    --sm: 0 2px 8px rgba(31,31,31,0.04), 0 1px 2px rgba(31,31,31,0.03);
+    --md: 0 10px 30px rgba(31,31,31,0.06), 0 2px 8px rgba(31,31,31,0.03);
+    --lg: 0 22px 56px rgba(31,31,31,0.08), 0 6px 16px rgba(31,31,31,0.04);
+    --ex-bg: #E8F4EC; --ex-fg: #2D6A47; --ex-bd: #BFDCCB;
+    --st-bg: #EAF0F6; --st-fg: #355A7A; --st-bd: #C2D4E6;
+    --gd-bg: #F8F1E6; --gd-fg: #8A6424; --gd-bd: #E6D6B8;
+    --r: 20px;
+    --rp: 999px;
 }
 
-/* ── Nuclear Streamlit reset ── */
-html, body, [class*="css"], .stApp, .stMarkdown, p, span, label, input, button, div {
-    font-family: 'Inter', system-ui, -apple-system, sans-serif !important;
+/* ── Nuclear reset ── */
+html, body, .stApp, [class*="css"], p, span, label, input, button, textarea, select, div {
+    font-family: 'Inter', system-ui, -apple-system, BlinkMacSystemFont, sans-serif !important;
 }
 .stApp {
     background: var(--bg) !important;
@@ -89,47 +86,50 @@ html, body, [class*="css"], .stApp, .stMarkdown, p, span, label, input, button, 
 #MainMenu, footer, header { visibility: hidden !important; height: 0 !important; }
 div[data-testid="stDecoration"],
 div[data-testid="stToolbar"],
-div[data-testid="stStatusWidget"] { display: none !important; }
-section.main > div { padding-top: 0 !important; }
+div[data-testid="stStatusWidget"],
+#stDecoration { display: none !important; }
 
 .block-container {
-    padding: 2rem 1.75rem 5rem !important;
-    max-width: 1080px !important;
+    padding: 2.25rem 2rem 5.5rem !important;
+    max-width: 1040px !important;
 }
-
-/* Vertical rhythm between streamlit blocks */
-div[data-testid="stVerticalBlock"] > div {
-    gap: 0.35rem;
-}
+section.main .block-container { max-width: 1040px !important; }
 
 /* Headings */
 h1, h2, h3, h4,
 [data-testid="stMarkdownContainer"] h1,
 [data-testid="stMarkdownContainer"] h2,
 [data-testid="stMarkdownContainer"] h3 {
-    font-family: 'Fraunces', Georgia, serif !important;
+    font-family: 'Fraunces', Georgia, 'Times New Roman', serif !important;
     color: var(--ink) !important;
     font-weight: 600 !important;
-    letter-spacing: -0.025em !important;
-    line-height: 1.2 !important;
+    letter-spacing: -0.028em !important;
+    line-height: 1.18 !important;
 }
 
+/* Reduce Streamlit element density */
+div[data-testid="stVerticalBlockBorderWrapper"] {
+    border-color: var(--line) !important;
+    border-radius: 16px !important;
+}
+[data-testid="stMarkdownContainer"] p { line-height: 1.65 !important; }
+
 /* ════════════ HEADER ════════════ */
-.abh-header {
+.abh-h {
     background: var(--white);
     border: 1px solid var(--line);
-    border-radius: 20px;
-    padding: 1.85rem 2.15rem 1.6rem;
-    margin-bottom: 1.5rem;
-    box-shadow: var(--shadow-sm);
+    border-radius: 22px;
+    padding: 2rem 2.25rem 1.75rem;
+    margin-bottom: 1.75rem;
+    box-shadow: var(--sm);
 }
 .abh-logo {
-    font-family: 'Fraunces', serif !important;
-    font-size: 1.7rem;
+    font-family: 'Fraunces', Georgia, serif !important;
+    font-size: 1.75rem;
     font-weight: 700;
     color: var(--ink);
     margin: 0;
-    letter-spacing: -0.03em;
+    letter-spacing: -0.035em;
     line-height: 1.1;
 }
 .abh-logo em {
@@ -137,35 +137,35 @@ h1, h2, h3, h4,
     color: var(--sage);
     font-weight: 600;
 }
-.abh-tagline {
-    font-size: 1rem;
-    color: var(--ink-soft);
-    margin: 0.5rem 0 0;
+.abh-tag {
+    font-size: 1.02rem;
+    color: var(--ink2);
+    margin: 0.55rem 0 0;
     line-height: 1.5;
     font-weight: 400;
 }
 .abh-trust {
     display: flex;
     flex-wrap: wrap;
-    gap: 0.55rem;
-    margin-top: 1.4rem;
-    padding-top: 1.25rem;
-    border-top: 1px solid var(--line-soft);
+    gap: 0.6rem;
+    margin-top: 1.5rem;
+    padding-top: 1.35rem;
+    border-top: 1px solid var(--line2);
 }
-.abh-badge {
-    font-size: 0.8rem;
+.abh-pill {
+    font-size: 0.82rem;
     font-weight: 500;
-    color: var(--ink-soft);
+    color: var(--ink2);
     background: var(--bg);
     border: 1px solid var(--line);
-    padding: 0.42rem 1rem;
-    border-radius: var(--r-pill);
+    padding: 0.48rem 1.05rem;
+    border-radius: var(--rp);
     letter-spacing: 0.01em;
 }
-.abh-badge.accent {
+.abh-pill.on {
     background: var(--sage-soft);
     color: var(--sage-deep);
-    border-color: var(--sage-mid);
+    border-color: var(--sage-line);
     font-weight: 600;
 }
 
@@ -174,38 +174,38 @@ h1, h2, h3, h4,
     position: relative;
     overflow: hidden;
     background:
-        radial-gradient(ellipse 65% 80% at 100% 0%, rgba(212,160,143,0.14) 0%, transparent 55%),
-        radial-gradient(ellipse 55% 70% at 0% 100%, rgba(122,158,142,0.12) 0%, transparent 50%),
-        linear-gradient(165deg, #FFFFFF 0%, #FBF8F4 100%);
+        radial-gradient(ellipse 70% 90% at 100% -10%, rgba(201,154,138,0.16) 0%, transparent 55%),
+        radial-gradient(ellipse 50% 70% at -5% 110%, rgba(122,158,142,0.12) 0%, transparent 50%),
+        linear-gradient(168deg, #FFFFFF 0%, #FBF8F4 100%);
     border: 1px solid var(--line);
     border-radius: 24px;
-    padding: 3.25rem 2.75rem 3rem;
-    margin-bottom: 2rem;
-    box-shadow: var(--shadow-md);
+    padding: 3.5rem 3rem 3.25rem;
+    margin-bottom: 2.25rem;
+    box-shadow: var(--md);
 }
-.abh-hero-kicker {
-    font-size: 0.75rem;
+.abh-kicker {
+    font-size: 0.76rem;
     font-weight: 600;
-    letter-spacing: 0.16em;
+    letter-spacing: 0.17em;
     text-transform: uppercase;
     color: var(--sage);
-    margin: 0 0 0.9rem;
+    margin: 0 0 1rem;
 }
-.abh-hero-title {
-    font-family: 'Fraunces', serif !important;
-    font-size: clamp(2rem, 4.5vw, 2.75rem);
+.abh-h1 {
+    font-family: 'Fraunces', Georgia, serif !important;
+    font-size: clamp(2.1rem, 4.8vw, 2.9rem);
     font-weight: 700;
     color: var(--ink);
-    margin: 0 0 1rem;
-    line-height: 1.12;
-    letter-spacing: -0.035em;
-    max-width: 14ch;
+    margin: 0 0 1.15rem;
+    line-height: 1.1;
+    letter-spacing: -0.04em;
+    max-width: 13ch;
 }
-.abh-hero-value {
-    font-size: 1.12rem;
-    color: var(--ink-soft);
+.abh-value {
+    font-size: 1.15rem;
+    color: var(--ink2);
     line-height: 1.75;
-    max-width: 34em;
+    max-width: 36em;
     margin: 0;
     font-weight: 400;
 }
@@ -216,169 +216,169 @@ section[data-testid="stSidebar"] {
     border-right: 1px solid var(--line) !important;
 }
 section[data-testid="stSidebar"] > div:first-child {
-    padding: 1.75rem 1.25rem 3rem !important;
+    padding: 2rem 1.35rem 3.5rem !important;
+    background: var(--white) !important;
 }
 section[data-testid="stSidebar"] label {
-    font-size: 0.88rem !important;
+    font-size: 0.9rem !important;
     font-weight: 550 !important;
     color: var(--ink) !important;
     letter-spacing: -0.01em !important;
 }
+section[data-testid="stSidebar"] [data-testid="stCaptionContainer"] {
+    opacity: 1 !important;
+}
 section[data-testid="stSidebar"] [data-testid="stCaptionContainer"] p {
     color: var(--muted) !important;
-    font-size: 0.82rem !important;
-    line-height: 1.5 !important;
+    font-size: 0.84rem !important;
+    line-height: 1.55 !important;
 }
-section[data-testid="stSidebar"] hr {
-    border-color: var(--line-soft) !important;
-    margin: 1.25rem 0 !important;
+section[data-testid="stSidebar"] .stMarkdown { margin-bottom: 0.1rem; }
+section[data-testid="stSidebar"] div[data-testid="stVerticalBlock"] > div {
+    padding-bottom: 0.15rem;
 }
 
-.sb-head { margin-bottom: 1.5rem; }
-.sb-title {
-    font-family: 'Fraunces', serif !important;
-    font-size: 1.3rem;
+.sb-h { margin-bottom: 1.75rem; padding-bottom: 1.25rem; border-bottom: 1px solid var(--line2); }
+.sb-t {
+    font-family: 'Fraunces', Georgia, serif !important;
+    font-size: 1.35rem;
     font-weight: 600;
     color: var(--ink);
-    margin: 0 0 0.4rem;
-    letter-spacing: -0.02em;
+    margin: 0 0 0.45rem;
+    letter-spacing: -0.025em;
 }
-.sb-sub {
-    font-size: 0.88rem;
+.sb-s {
+    font-size: 0.9rem;
     color: var(--muted);
     margin: 0;
     line-height: 1.55;
 }
 
-.chip-tray {
+.chips {
     background: var(--bg);
     border: 1px solid var(--line);
-    border-radius: var(--r-sm);
-    padding: 0.9rem 1rem;
-    margin-bottom: 1.35rem;
+    border-radius: 16px;
+    padding: 1rem 1.05rem;
+    margin-bottom: 1.5rem;
 }
-.chip-tray-label {
+.chips-l {
     font-size: 0.7rem;
     font-weight: 600;
     text-transform: uppercase;
-    letter-spacing: 0.1em;
+    letter-spacing: 0.11em;
     color: var(--muted);
-    margin-bottom: 0.55rem;
+    margin-bottom: 0.65rem;
 }
 .chip {
     display: inline-block;
-    font-size: 0.76rem;
+    font-size: 0.78rem;
     font-weight: 500;
     background: var(--white);
     color: var(--sage-deep);
-    border: 1px solid var(--sage-mid);
-    padding: 0.35rem 0.75rem;
-    border-radius: var(--r-pill);
-    margin: 0.15rem 0.2rem 0.15rem 0;
-    box-shadow: var(--shadow-xs);
+    border: 1px solid var(--sage-line);
+    padding: 0.38rem 0.8rem;
+    border-radius: var(--rp);
+    margin: 0.18rem 0.25rem 0.18rem 0;
+    box-shadow: var(--sx);
 }
 
 .fg {
-    background: var(--bg-elevated);
+    background: var(--bg2);
     border: 1px solid var(--line);
-    border-radius: 16px;
-    padding: 1.15rem 1.1rem 1rem;
-    margin-bottom: 1.1rem;
-    box-shadow: var(--shadow-xs);
+    border-radius: 18px;
+    padding: 1.25rem 1.15rem 1.1rem;
+    margin: 0 0 1.25rem;
+    box-shadow: var(--sx);
 }
-.fg-label {
-    font-family: 'Fraunces', serif !important;
-    font-size: 1.02rem;
+.fg-t {
+    font-family: 'Fraunces', Georgia, serif !important;
+    font-size: 1.05rem;
     font-weight: 600;
     color: var(--ink);
-    margin: 0 0 0.25rem;
+    margin: 0 0 0.3rem;
 }
-.fg-help {
-    font-size: 0.82rem;
+.fg-h {
+    font-size: 0.84rem;
     color: var(--muted);
-    margin: 0 0 0.9rem;
+    margin: 0 0 1rem;
     line-height: 1.5;
 }
 
-/* Inputs */
-.stTextInput input,
-.stNumberInput input {
+/* Form controls */
+.stTextInput input {
     border-radius: 14px !important;
     border: 1.5px solid var(--line) !important;
     background: var(--white) !important;
-    padding: 0.85rem 1.1rem !important;
+    padding: 0.9rem 1.15rem !important;
     font-size: 0.95rem !important;
     color: var(--ink) !important;
-    box-shadow: var(--shadow-xs) !important;
+    box-shadow: var(--sx) !important;
 }
 .stTextInput input:focus {
     border-color: var(--blush) !important;
-    box-shadow: 0 0 0 3px rgba(212,160,143,0.18) !important;
+    box-shadow: 0 0 0 3px rgba(201,154,138,0.2) !important;
 }
 .stSelectbox > div > div,
 .stMultiSelect > div > div {
     border-radius: 14px !important;
     border-color: var(--line) !important;
     background: var(--white) !important;
-    box-shadow: var(--shadow-xs) !important;
-    min-height: 2.75rem !important;
+    box-shadow: var(--sx) !important;
+    min-height: 2.85rem !important;
 }
 
-/* Radio pills */
-div[role="radiogroup"] {
-    gap: 0.5rem !important;
-    flex-wrap: wrap !important;
-}
+/* Radio as soft segments */
+div[role="radiogroup"] { gap: 0.55rem !important; flex-wrap: wrap !important; }
 div[role="radiogroup"] label {
     background: var(--white) !important;
     border: 1.5px solid var(--line) !important;
-    border-radius: var(--r-pill) !important;
-    padding: 0.45rem 1rem !important;
+    border-radius: var(--rp) !important;
+    padding: 0.5rem 1.1rem !important;
     margin: 0 !important;
+    transition: all 0.15s ease !important;
 }
 div[role="radiogroup"] label:has(input:checked) {
     background: var(--sage-soft) !important;
-    border-color: var(--sage-mid) !important;
+    border-color: var(--sage-line) !important;
 }
 
-/* Sliders — blush accent */
-div[data-testid="stSlider"] > div > div > div {
-    background: var(--blush) !important;
-}
+/* Sliders */
+div[data-testid="stSlider"] > div > div > div { background: var(--blush) !important; }
 div[data-testid="stSlider"] [role="slider"] {
     background: var(--blush) !important;
     border: 3px solid #fff !important;
-    box-shadow: 0 2px 10px rgba(212,160,143,0.4) !important;
-    width: 1.15rem !important;
-    height: 1.15rem !important;
+    box-shadow: 0 2px 12px rgba(201,154,138,0.45) !important;
+    width: 1.2rem !important;
+    height: 1.2rem !important;
 }
+div[data-testid="stSlider"] { padding-top: 0.35rem !important; padding-bottom: 0.65rem !important; }
 
-/* Buttons — pill, soft, expensive */
+/* Buttons */
 .stButton > button {
-    border-radius: var(--r-pill) !important;
+    border-radius: var(--rp) !important;
     font-weight: 600 !important;
-    font-size: 0.92rem !important;
-    padding: 0.7rem 1.35rem !important;
+    font-size: 0.93rem !important;
+    padding: 0.75rem 1.4rem !important;
+    min-height: 3rem !important;
     letter-spacing: 0.01em !important;
     transition: all 0.18s ease !important;
-    min-height: 2.85rem !important;
 }
 .stButton > button[kind="primary"] {
     background: var(--blush) !important;
     color: #fff !important;
     border: none !important;
-    box-shadow: 0 4px 16px rgba(212,160,143,0.35) !important;
+    box-shadow: 0 4px 18px rgba(201,154,138,0.38) !important;
 }
 .stButton > button[kind="primary"]:hover {
-    background: var(--blush-deep) !important;
+    background: var(--blush-hover) !important;
     transform: translateY(-1px);
-    box-shadow: 0 8px 22px rgba(212,160,143,0.4) !important;
+    box-shadow: 0 8px 24px rgba(201,154,138,0.42) !important;
 }
 .stButton > button:not([kind="primary"]) {
     background: var(--white) !important;
     color: var(--ink) !important;
     border: 1.5px solid var(--line) !important;
-    box-shadow: var(--shadow-xs) !important;
+    box-shadow: var(--sx) !important;
 }
 .stButton > button:not([kind="primary"]):hover {
     border-color: var(--sage) !important;
@@ -386,83 +386,80 @@ div[data-testid="stSlider"] [role="slider"] {
     color: var(--sage-deep) !important;
 }
 
-/* Link buttons (resources) */
 .stLinkButton > a {
-    border-radius: var(--r-pill) !important;
+    border-radius: var(--rp) !important;
     border: 1.5px solid var(--line) !important;
     background: var(--white) !important;
     color: var(--ink) !important;
     font-weight: 550 !important;
-    padding: 0.65rem 1.2rem !important;
-    box-shadow: var(--shadow-xs) !important;
+    padding: 0.7rem 1.25rem !important;
+    box-shadow: var(--sx) !important;
 }
 .stLinkButton > a:hover {
     border-color: var(--blush) !important;
     background: var(--blush-soft) !important;
-    color: var(--blush-deep) !important;
+    color: var(--blush-hover) !important;
 }
 
-/* Search shell */
-.search-shell {
+/* Search */
+.search-box {
     background: var(--white);
     border: 1px solid var(--line);
-    border-radius: 20px;
-    padding: 1.25rem 1.4rem 0.5rem;
-    margin-bottom: 1.75rem;
-    box-shadow: var(--shadow-sm);
+    border-radius: 22px;
+    padding: 1.35rem 1.5rem 0.55rem;
+    margin-bottom: 2rem;
+    box-shadow: var(--sm);
 }
-.search-label {
+.search-lbl {
     font-size: 0.72rem;
     font-weight: 600;
-    letter-spacing: 0.12em;
+    letter-spacing: 0.13em;
     text-transform: uppercase;
     color: var(--muted);
-    margin: 0 0 0.15rem;
+    margin: 0 0 0.1rem;
 }
 
-/* Tabs — Airbnb-like segmented control */
+/* Tabs */
 .stTabs [data-baseweb="tab-list"] {
-    gap: 0.25rem;
+    gap: 0.3rem;
     background: var(--white);
     border: 1px solid var(--line);
-    border-radius: 16px;
-    padding: 0.45rem;
-    box-shadow: var(--shadow-sm);
-    margin-bottom: 1.5rem !important;
+    border-radius: 18px;
+    padding: 0.5rem;
+    box-shadow: var(--sm);
+    margin-bottom: 2rem !important;
 }
 .stTabs [data-baseweb="tab"] {
     background: transparent !important;
     color: var(--muted) !important;
     font-weight: 600 !important;
-    font-size: 0.92rem !important;
-    padding: 0.8rem 1.4rem !important;
+    font-size: 0.93rem !important;
+    padding: 0.85rem 1.5rem !important;
     border-radius: 12px !important;
 }
 .stTabs [aria-selected="true"] {
     color: var(--ink) !important;
     background: var(--bg) !important;
-    box-shadow: var(--shadow-xs) !important;
+    box-shadow: var(--sx) !important;
 }
 .stTabs [data-baseweb="tab-highlight"],
-.stTabs [data-baseweb="tab-border"] {
-    display: none !important;
-}
+.stTabs [data-baseweb="tab-border"] { display: none !important; }
 
-/* ════════════ CARDS (Airbnb-inspired) ════════════ */
+/* ════════════ FACILITY CARDS ════════════ */
 .fc {
     background: var(--white);
     border: 1px solid var(--line);
     border-radius: 20px;
-    padding: 2rem 2rem 1.75rem;
-    margin-bottom: 1.75rem;
-    box-shadow: var(--shadow-md);
+    padding: 2.15rem 2.15rem 1.9rem;
+    margin-bottom: 2rem;
+    box-shadow: var(--md);
     transition: transform 0.22s ease, box-shadow 0.22s ease;
 }
 .fc:hover {
     transform: translateY(-4px);
-    box-shadow: var(--shadow-lg);
+    box-shadow: var(--lg);
 }
-.fc-top {
+.fc-row {
     display: flex;
     justify-content: space-between;
     align-items: flex-start;
@@ -470,30 +467,30 @@ div[data-testid="stSlider"] [role="slider"] {
     flex-wrap: wrap;
 }
 .fc-name {
-    font-family: 'Fraunces', serif !important;
-    font-size: 1.45rem;
+    font-family: 'Fraunces', Georgia, serif !important;
+    font-size: 1.5rem;
     font-weight: 600;
     color: var(--ink);
-    margin: 0 0 0.4rem;
-    line-height: 1.22;
-    letter-spacing: -0.025em;
+    margin: 0 0 0.45rem;
+    line-height: 1.2;
+    letter-spacing: -0.03em;
 }
 .fc-meta {
-    font-size: 0.95rem;
-    color: var(--ink-soft);
-    margin: 0 0 0.7rem;
+    font-size: 0.98rem;
+    color: var(--ink2);
+    margin: 0 0 0.8rem;
     font-weight: 400;
 }
 .fc-type {
     display: inline-block;
     font-size: 0.72rem;
     font-weight: 600;
-    letter-spacing: 0.07em;
+    letter-spacing: 0.08em;
     text-transform: uppercase;
     color: var(--sage-deep);
     background: var(--sage-soft);
-    border: 1px solid var(--sage-mid);
-    padding: 0.3rem 0.8rem;
+    border: 1px solid var(--sage-line);
+    padding: 0.32rem 0.85rem;
     border-radius: 10px;
 }
 .fc-score {
@@ -501,315 +498,288 @@ div[data-testid="stSlider"] [role="slider"] {
     flex-direction: column;
     align-items: center;
     justify-content: center;
-    min-width: 5.5rem;
-    padding: 0.95rem 1.1rem;
-    border-radius: 16px;
+    min-width: 5.75rem;
+    padding: 1.05rem 1.15rem;
+    border-radius: 18px;
     text-align: center;
     flex-shrink: 0;
 }
 .fc-score .n {
-    font-family: 'Fraunces', serif !important;
-    font-size: 2rem;
+    font-family: 'Fraunces', Georgia, serif !important;
+    font-size: 2.1rem;
     font-weight: 700;
     line-height: 1;
-    letter-spacing: -0.03em;
+    letter-spacing: -0.04em;
 }
 .fc-score .l {
     font-size: 0.7rem;
     font-weight: 600;
     text-transform: uppercase;
-    letter-spacing: 0.07em;
-    margin-top: 0.35rem;
+    letter-spacing: 0.08em;
+    margin-top: 0.4rem;
 }
-.fc-score.excellent {
-    background: var(--excellent-bg);
-    color: var(--excellent-fg);
-    border: 1px solid #C0DFCB;
-}
-.fc-score.strong {
-    background: var(--strong-bg);
-    color: var(--strong-fg);
-    border: 1px solid #C5D6E6;
-}
-.fc-score.good {
-    background: var(--good-bg);
-    color: var(--good-fg);
-    border: 1px solid #E8D8BC;
-}
+.fc-score.ex { background: var(--ex-bg); color: var(--ex-fg); border: 1px solid var(--ex-bd); }
+.fc-score.st { background: var(--st-bg); color: var(--st-fg); border: 1px solid var(--st-bd); }
+.fc-score.gd { background: var(--gd-bg); color: var(--gd-fg); border: 1px solid var(--gd-bd); }
+
 .fc-tags {
     display: flex;
     flex-wrap: wrap;
-    gap: 0.45rem;
-    margin: 1.35rem 0 1.15rem;
+    gap: 0.5rem;
+    margin: 1.5rem 0 1.25rem;
 }
 .fc-tag {
-    font-size: 0.8rem;
+    font-size: 0.82rem;
     font-weight: 500;
-    color: var(--ink-soft);
+    color: var(--ink2);
     background: var(--bg);
     border: 1px solid var(--line);
-    padding: 0.38rem 0.8rem;
+    padding: 0.42rem 0.9rem;
     border-radius: 10px;
 }
 .fc-cost {
-    background: linear-gradient(145deg, var(--blush-soft) 0%, #FFFCFA 100%);
-    border: 1px solid var(--blush-mid);
+    background: linear-gradient(150deg, var(--blush-soft) 0%, #FFFCFA 100%);
+    border: 1px solid var(--blush-line);
     border-radius: 16px;
-    padding: 1.2rem 1.35rem;
+    padding: 1.3rem 1.45rem;
     display: flex;
     flex-wrap: wrap;
-    gap: 2.25rem;
-    margin-bottom: 0.9rem;
+    gap: 2.5rem;
+    margin-bottom: 1rem;
 }
 .fc-cost .ci strong {
     display: block;
     font-size: 0.72rem;
     font-weight: 600;
     text-transform: uppercase;
-    letter-spacing: 0.08em;
+    letter-spacing: 0.09em;
     color: var(--muted);
-    margin-bottom: 0.25rem;
+    margin-bottom: 0.3rem;
 }
 .fc-cost .ci span {
-    font-size: 1.2rem;
+    font-size: 1.25rem;
     font-weight: 600;
     color: var(--ink);
-    letter-spacing: -0.02em;
+    letter-spacing: -0.025em;
 }
 .fc-blurb {
-    font-size: 0.98rem;
-    color: var(--ink-soft);
+    font-size: 1rem;
+    color: var(--ink2);
     line-height: 1.6;
-    margin: 0.5rem 0 0;
+    margin: 0.55rem 0 0;
     font-style: italic;
 }
 
 /* Results header */
 .rh {
-    margin: 0.25rem 0 1.75rem;
-    padding-bottom: 1.25rem;
+    margin: 0.15rem 0 2rem;
+    padding-bottom: 1.4rem;
     border-bottom: 1px solid var(--line);
 }
-.rh-title {
-    font-family: 'Fraunces', serif !important;
-    font-size: 1.5rem;
+.rh-t {
+    font-family: 'Fraunces', Georgia, serif !important;
+    font-size: 1.55rem;
     font-weight: 600;
     color: var(--ink);
     margin: 0;
-    letter-spacing: -0.025em;
+    letter-spacing: -0.03em;
 }
-.rh-title em {
-    font-style: normal;
-    color: var(--sage);
-}
-.rh-sub {
-    font-size: 0.95rem;
+.rh-t em { font-style: normal; color: var(--sage); }
+.rh-s {
+    font-size: 0.98rem;
     color: var(--muted);
-    margin: 0.4rem 0 0;
+    margin: 0.45rem 0 0;
 }
 
 /* Empty */
 .empty {
     text-align: center;
-    padding: 4rem 2rem;
+    padding: 4.5rem 2.25rem;
     background: var(--white);
     border: 1.5px dashed var(--line);
-    border-radius: 20px;
-    margin: 1.25rem 0 2rem;
-    box-shadow: var(--shadow-sm);
+    border-radius: 22px;
+    margin: 1.5rem 0 2.25rem;
+    box-shadow: var(--sm);
 }
-.empty-ico { font-size: 2.5rem; margin-bottom: 1rem; opacity: 0.85; }
-.empty-h {
-    font-family: 'Fraunces', serif !important;
-    font-size: 1.35rem;
+.empty-i { font-size: 2.6rem; margin-bottom: 1.1rem; opacity: 0.9; }
+.empty-t {
+    font-family: 'Fraunces', Georgia, serif !important;
+    font-size: 1.4rem;
     color: var(--ink);
-    margin: 0 0 0.6rem;
+    margin: 0 0 0.65rem;
 }
 .empty-p {
-    font-size: 1rem;
-    color: var(--ink-soft);
-    max-width: 380px;
+    font-size: 1.02rem;
+    color: var(--ink2);
+    max-width: 400px;
     margin: 0 auto;
     line-height: 1.7;
 }
 
 /* Gentle note */
 .gentle {
-    font-size: 0.95rem;
-    color: var(--ink-soft);
+    font-size: 0.98rem;
+    color: var(--ink2);
     line-height: 1.75;
     background: var(--white);
     border: 1px solid var(--line);
     border-left: 4px solid var(--sage);
-    border-radius: 0 16px 16px 0;
-    padding: 1.25rem 1.5rem;
-    margin: 1.1rem 0 1.75rem;
-    box-shadow: var(--shadow-sm);
+    border-radius: 0 18px 18px 0;
+    padding: 1.35rem 1.6rem;
+    margin: 1.25rem 0 2rem;
+    box-shadow: var(--sm);
 }
 
 /* Map */
-.map-wrap {
+.map-box {
     background: var(--white);
     border: 1px solid var(--line);
-    border-radius: 20px;
-    padding: 1.5rem;
-    box-shadow: var(--shadow-md);
-    margin-bottom: 1.25rem;
+    border-radius: 22px;
+    padding: 1.65rem;
+    box-shadow: var(--md);
+    margin-bottom: 1.5rem;
 }
 .map-cap {
-    font-size: 0.98rem;
-    color: var(--ink-soft);
-    margin: 0 0 1.15rem;
+    font-size: 1rem;
+    color: var(--ink2);
+    margin: 0 0 1.25rem;
     line-height: 1.65;
 }
 
 /* Resources */
 .res-intro {
-    font-size: 1.1rem;
-    color: var(--ink-soft);
+    font-size: 1.12rem;
+    color: var(--ink2);
     line-height: 1.75;
-    margin: 0.25rem 0 2rem;
-    max-width: 36em;
+    margin: 0.25rem 0 2.25rem;
+    max-width: 38em;
 }
-.res-section {
-    font-family: 'Fraunces', serif !important;
-    font-size: 1.25rem;
+.res-sec {
+    font-family: 'Fraunces', Georgia, serif !important;
+    font-size: 1.3rem;
     color: var(--ink);
-    margin: 2.5rem 0 1.25rem;
-    padding-bottom: 0.65rem;
+    margin: 2.75rem 0 1.4rem;
+    padding-bottom: 0.75rem;
     border-bottom: 1px solid var(--line);
-    letter-spacing: -0.02em;
+    letter-spacing: -0.025em;
 }
-.res-card {
+.res-c {
     background: var(--white);
     border: 1px solid var(--line);
     border-radius: 18px;
-    padding: 1.75rem 1.65rem 1.5rem;
-    margin-bottom: 1.15rem;
-    min-height: 180px;
-    box-shadow: var(--shadow-md);
+    padding: 1.9rem 1.75rem 1.65rem;
+    margin-bottom: 1.35rem;
+    min-height: 188px;
+    box-shadow: var(--md);
     transition: transform 0.2s ease, box-shadow 0.2s ease;
 }
-.res-card:hover {
-    transform: translateY(-3px);
-    box-shadow: var(--shadow-lg);
-}
-.res-ico { font-size: 1.65rem; margin-bottom: 0.65rem; }
-.res-cat {
+.res-c:hover { transform: translateY(-3px); box-shadow: var(--lg); }
+.res-i { font-size: 1.7rem; margin-bottom: 0.7rem; }
+.res-k {
     font-size: 0.72rem;
     font-weight: 600;
-    letter-spacing: 0.1em;
+    letter-spacing: 0.11em;
     text-transform: uppercase;
     color: var(--sage);
 }
-.res-name {
-    font-family: 'Fraunces', serif !important;
-    font-size: 1.15rem;
+.res-n {
+    font-family: 'Fraunces', Georgia, serif !important;
+    font-size: 1.18rem;
     font-weight: 600;
     color: var(--ink);
-    margin: 0.45rem 0 0.55rem;
-    line-height: 1.3;
-    letter-spacing: -0.015em;
+    margin: 0.5rem 0 0.6rem;
+    line-height: 1.28;
+    letter-spacing: -0.02em;
 }
-.res-desc {
-    font-size: 0.95rem;
-    color: var(--ink-soft);
+.res-d {
+    font-size: 0.98rem;
+    color: var(--ink2);
     line-height: 1.65;
     margin: 0;
 }
 
 /* Footer */
-.abh-foot {
-    margin-top: 4rem;
-    padding: 3rem 1rem 2rem;
+.abh-f {
+    margin-top: 4.5rem;
+    padding: 3.25rem 1rem 2rem;
     border-top: 1px solid var(--line);
     text-align: center;
 }
-.abh-foot .brand {
-    font-family: 'Fraunces', serif !important;
-    font-size: 1.15rem;
+.abh-f .b {
+    font-family: 'Fraunces', Georgia, serif !important;
+    font-size: 1.2rem;
     color: var(--ink);
-    margin-bottom: 0.65rem;
+    margin-bottom: 0.7rem;
 }
-.abh-foot p {
-    font-size: 0.88rem;
+.abh-f p {
+    font-size: 0.9rem;
     color: var(--muted);
     line-height: 1.75;
-    max-width: 560px;
+    max-width: 540px;
     margin: 0.4rem auto;
 }
-.foot-pills {
+.f-pills {
     display: flex;
     justify-content: center;
     flex-wrap: wrap;
-    gap: 0.55rem;
-    margin-top: 1.5rem;
+    gap: 0.6rem;
+    margin-top: 1.65rem;
 }
-.foot-pill {
-    font-size: 0.76rem;
+.f-p {
+    font-size: 0.78rem;
     font-weight: 500;
     color: var(--sage-deep);
     background: var(--sage-soft);
-    border: 1px solid var(--sage-mid);
-    padding: 0.42rem 0.95rem;
-    border-radius: var(--r-pill);
+    border: 1px solid var(--sage-line);
+    padding: 0.45rem 1rem;
+    border-radius: var(--rp);
 }
 
 /* Expanders */
 div[data-testid="stExpander"] {
     background: var(--white) !important;
     border: 1px solid var(--line) !important;
-    border-radius: 16px !important;
-    box-shadow: var(--shadow-sm) !important;
-    margin-bottom: 1rem !important;
+    border-radius: 18px !important;
+    box-shadow: var(--sm) !important;
+    margin-bottom: 1.15rem !important;
 }
-div[data-testid="stExpander"] details {
-    border: none !important;
-}
-div[data-testid="stExpander"] summary {
-    padding: 0.85rem 0.5rem !important;
-}
+div[data-testid="stExpander"] details { border: none !important; }
+div[data-testid="stExpander"] summary { padding: 0.95rem 0.6rem !important; }
 div[data-testid="stExpander"] summary p {
     font-weight: 550 !important;
     color: var(--ink) !important;
-    font-size: 0.98rem !important;
+    font-size: 1rem !important;
 }
 
-/* Alerts soft */
 div[data-testid="stAlert"] {
-    border-radius: 14px !important;
+    border-radius: 16px !important;
     border: 1px solid var(--line) !important;
 }
 
 .stSpinner > div { border-top-color: var(--blush) !important; }
 
-/* Sidebar gap breathing room */
-section[data-testid="stSidebar"] .stMarkdown {
-    margin-bottom: 0.15rem;
-}
-section[data-testid="stSidebar"] .stButton {
-    margin-top: 0.35rem;
-}
+/* Sidebar apply zone breathing room */
+section[data-testid="stSidebar"] .stButton { margin-top: 0.25rem; }
 
 @media (max-width: 768px) {
-    .abh-hero { padding: 2rem 1.4rem; border-radius: 18px; }
-    .abh-hero-title { font-size: 1.75rem; max-width: none; }
-    .abh-header { padding: 1.35rem 1.3rem; }
-    .fc { padding: 1.4rem 1.3rem; margin-bottom: 1.35rem; border-radius: 16px; }
-    .fc-name { font-size: 1.2rem; }
-    .fc-top { flex-direction: column; gap: 1rem; }
+    .abh-hero { padding: 2.15rem 1.5rem; border-radius: 20px; }
+    .abh-h1 { font-size: 1.85rem; max-width: none; }
+    .abh-h { padding: 1.5rem 1.4rem; }
+    .fc { padding: 1.5rem 1.4rem; margin-bottom: 1.5rem; border-radius: 18px; }
+    .fc-name { font-size: 1.25rem; }
+    .fc-row { flex-direction: column; gap: 1.1rem; }
     .fc-score {
         flex-direction: row;
-        gap: 0.5rem;
+        gap: 0.55rem;
         align-self: flex-start;
         min-width: auto;
-        padding: 0.6rem 1rem;
+        padding: 0.65rem 1.05rem;
     }
-    .fc-score .n { font-size: 1.4rem; }
-    .fc-cost { gap: 1.25rem; padding: 1rem 1.1rem; }
-    .rh-title { font-size: 1.25rem; }
-    .stTabs [data-baseweb="tab"] { padding: 0.6rem 0.85rem !important; font-size: 0.82rem !important; }
-    .block-container { padding: 1.25rem 0.85rem 3.5rem !important; }
+    .fc-score .n { font-size: 1.45rem; }
+    .fc-cost { gap: 1.35rem; padding: 1.1rem 1.2rem; }
+    .rh-t { font-size: 1.3rem; }
+    .stTabs [data-baseweb="tab"] { padding: 0.65rem 0.9rem !important; font-size: 0.84rem !important; }
+    .block-container { padding: 1.35rem 0.9rem 4rem !important; }
 }
 </style>
 """
@@ -863,10 +833,10 @@ def toggle_save(fid: str) -> None:
 
 def quality_tier(score: int) -> tuple[str, str]:
     if score >= 90:
-        return "excellent", "Excellent"
+        return "ex", "Excellent"
     if score >= 80:
-        return "strong", "Strong"
-    return "good", "Good"
+        return "st", "Strong"
+    return "gd", "Good"
 
 
 def chip_specs(filters: dict) -> list[dict[str, Any]]:
@@ -922,14 +892,14 @@ def remove_chip(action: str, value: Any = None) -> None:
 def render_header(total: int, saved: int) -> None:
     st.markdown(
         f"""
-        <div class="abh-header">
+        <div class="abh-h">
             <p class="abh-logo">Atlanta <em>Birth Hub</em></p>
-            <p class="abh-tagline">A calm place to explore birth options across Georgia</p>
+            <p class="abh-tag">A calm place to explore birth options across Georgia</p>
             <div class="abh-trust">
-                <span class="abh-badge accent">{total} verified facilities</span>
-                <span class="abh-badge">CMS data</span>
-                <span class="abh-badge">No account needed</span>
-                <span class="abh-badge">♥ {saved} saved</span>
+                <span class="abh-pill on">{total} verified facilities</span>
+                <span class="abh-pill">CMS data</span>
+                <span class="abh-pill">No account needed</span>
+                <span class="abh-pill">♥ {saved} saved</span>
             </div>
         </div>
         """,
@@ -941,9 +911,9 @@ def render_hero() -> None:
     st.markdown(
         """
         <div class="abh-hero">
-            <p class="abh-hero-kicker">For expecting mothers</p>
-            <h1 class="abh-hero-title">Find a birth place that feels right</h1>
-            <p class="abh-hero-value">
+            <p class="abh-kicker">For expecting mothers</p>
+            <h1 class="abh-h1">Find a birth place that feels right</h1>
+            <p class="abh-value">
                 Compare hospitals and birth centers across Georgia — quality, costs, and care style —
                 so you can choose with clarity, not overwhelm.
             </p>
@@ -975,8 +945,8 @@ def render_empty(icon: str, title: str, body: str) -> None:
     st.markdown(
         f"""
         <div class="empty">
-            <div class="empty-ico">{icon}</div>
-            <p class="empty-h">{title}</p>
+            <div class="empty-i">{icon}</div>
+            <p class="empty-t">{title}</p>
             <p class="empty-p">{body}</p>
         </div>
         """,
@@ -987,9 +957,9 @@ def render_empty(icon: str, title: str, body: str) -> None:
 def render_sidebar() -> None:
     st.sidebar.markdown(
         """
-        <div class="sb-head">
-            <p class="sb-title">Narrow your search</p>
-            <p class="sb-sub">Choose what matters, then Apply. You can always start over.</p>
+        <div class="sb-h">
+            <p class="sb-t">Narrow your search</p>
+            <p class="sb-s">Choose what matters, then Apply. You can always start over.</p>
         </div>
         """,
         unsafe_allow_html=True,
@@ -1002,22 +972,22 @@ def render_sidebar() -> None:
     if chips:
         labels = " ".join(f'<span class="chip">{c["label"]}</span>' for c in chips[:10])
         st.sidebar.markdown(
-            f'<div class="chip-tray"><div class="chip-tray-label">Active filters</div>{labels}</div>',
+            f'<div class="chips"><div class="chips-l">Active filters</div>{labels}</div>',
             unsafe_allow_html=True,
         )
-        # Compact remove row
-        st.sidebar.caption("Remove a filter:")
-        cols = st.sidebar.columns(min(len(chips), 4))
+        st.sidebar.caption("Tap to remove:")
+        n = min(len(chips), 4)
+        cols = st.sidebar.columns(n)
         for i, chip in enumerate(chips[:8]):
-            with cols[i % len(cols)]:
-                short = chip["label"][:14] + ("…" if len(chip["label"]) > 14 else "")
+            with cols[i % n]:
+                short = chip["label"][:12] + ("…" if len(chip["label"]) > 12 else "")
                 if st.button(f"× {short}", key=f"rm_{i}_{chip['action']}_{chip['value']}", use_container_width=True):
                     remove_chip(chip["action"], chip["value"])
                     st.rerun()
 
     st.sidebar.markdown(
-        '<div class="fg"><p class="fg-label">Location</p>'
-        '<p class="fg-help">Where would you like to give birth?</p></div>',
+        '<div class="fg"><p class="fg-t">Location</p>'
+        '<p class="fg-h">Where would you like to give birth?</p></div>',
         unsafe_allow_html=True,
     )
     draft["regions"] = st.sidebar.multiselect(
@@ -1049,8 +1019,8 @@ def render_sidebar() -> None:
         draft["user_zip"] = applied.get("user_zip", DEFAULT_ZIP)
 
     st.sidebar.markdown(
-        '<div class="fg"><p class="fg-label">Quality</p>'
-        '<p class="fg-help">Set a floor if you like — or leave open.</p></div>',
+        '<div class="fg"><p class="fg-t">Quality</p>'
+        '<p class="fg-h">Set a floor if you like — or leave open.</p></div>',
         unsafe_allow_html=True,
     )
     score_keys = list(QUALITY_SCORE_OPTIONS.keys())
@@ -1072,8 +1042,8 @@ def render_sidebar() -> None:
     )
 
     st.sidebar.markdown(
-        '<div class="fg"><p class="fg-label">Birth experience</p>'
-        '<p class="fg-help">Hospital, midwifery, NICU, water birth, and more.</p></div>',
+        '<div class="fg"><p class="fg-t">Birth experience</p>'
+        '<p class="fg-h">Hospital, midwifery, NICU, water birth, and more.</p></div>',
         unsafe_allow_html=True,
     )
     draft["services"] = st.sidebar.multiselect(
@@ -1084,8 +1054,8 @@ def render_sidebar() -> None:
     )
 
     st.sidebar.markdown(
-        '<div class="fg"><p class="fg-label">Budget</p>'
-        '<p class="fg-help">Facility estimates — insurance changes your share.</p></div>',
+        '<div class="fg"><p class="fg-t">Budget</p>'
+        '<p class="fg-h">Facility estimates only — insurance changes your share.</p></div>',
         unsafe_allow_html=True,
     )
     v_price = st.sidebar.slider(
@@ -1094,6 +1064,7 @@ def render_sidebar() -> None:
         (int(applied.get("price_min", 4000)), int(applied.get("price_max", 25000))),
         step=500,
         format="$%d",
+        help="Illustrative facility charge range before insurance.",
     )
     draft["price_min"], draft["price_max"] = v_price
 
@@ -1103,6 +1074,7 @@ def render_sidebar() -> None:
         (int(applied.get("csection_price_min", 5000)), int(applied.get("csection_price_max", 30000))),
         step=500,
         format="$%d",
+        help="Birth centers without C-section on site still appear.",
     )
     draft["csection_price_min"], draft["csection_price_max"] = cs_price
 
@@ -1129,7 +1101,7 @@ def render_sidebar() -> None:
 
     st.sidebar.markdown("")
     st.sidebar.markdown("")
-    c1, c2 = st.sidebar.columns([1.45, 1])
+    c1, c2 = st.sidebar.columns([1.5, 1])
     with c1:
         if st.button("Apply filters", type="primary", use_container_width=True):
             st.session_state.applied_filters = draft
@@ -1163,7 +1135,7 @@ def render_card(row: pd.Series, key_prefix: str = "search") -> None:
     st.markdown(
         f"""
         <div class="fc">
-            <div class="fc-top">
+            <div class="fc-row">
                 <div>
                     <p class="fc-name">{row['name']}</p>
                     <p class="fc-meta">{meta}</p>
@@ -1191,7 +1163,7 @@ def render_card(row: pd.Series, key_prefix: str = "search") -> None:
         unsafe_allow_html=True,
     )
 
-    b1, b2 = st.columns([1.4, 1])
+    b1, b2 = st.columns([1.45, 1])
     with b1:
         if st.button(
             "♥ Saved" if saved else "♡ Save to compare",
@@ -1218,8 +1190,8 @@ def render_search(df: pd.DataFrame) -> None:
     st.markdown(
         f"""
         <div class="rh">
-            <p class="rh-title"><em>{len(df)}</em> places for you to explore</p>
-            <p class="rh-sub">Highest quality first — change sort anytime</p>
+            <p class="rh-t"><em>{len(df)}</em> places for you to explore</p>
+            <p class="rh-s">Highest quality first — change sort anytime</p>
         </div>
         """,
         unsafe_allow_html=True,
@@ -1254,7 +1226,7 @@ def render_search(df: pd.DataFrame) -> None:
 
 def render_map(df: pd.DataFrame) -> None:
     st.markdown(
-        '<div class="map-wrap"><p class="map-cap">'
+        '<div class="map-box"><p class="map-cap">'
         "Explore locations across Georgia. Tap a pin for a quick snapshot — "
         "the same trusted listings as Search, on the map."
         "</p>",
@@ -1290,7 +1262,7 @@ def render_map(df: pd.DataFrame) -> None:
                 tooltip=row["name"],
                 icon=folium.Icon(color="beige", icon="info-sign"),
             ).add_to(cluster)
-        st_folium(m, width=None, height=540, returned_objects=[])
+        st_folium(m, width=None, height=560, returned_objects=[])
     st.markdown("</div>", unsafe_allow_html=True)
 
 
@@ -1302,18 +1274,18 @@ def render_resources() -> None:
     )
     resources = load_resources()
     for category in resources["category"].unique():
-        st.markdown(f'<p class="res-section">{category}</p>', unsafe_allow_html=True)
+        st.markdown(f'<p class="res-sec">{category}</p>', unsafe_allow_html=True)
         cat = resources[resources["category"] == category]
         cols = st.columns(2, gap="large")
         for i, (_, r) in enumerate(cat.iterrows()):
             with cols[i % 2]:
                 st.markdown(
                     f"""
-                    <div class="res-card">
-                        <div class="res-ico">{r['icon']}</div>
-                        <div class="res-cat">{r['category']}</div>
-                        <div class="res-name">{r['name']}</div>
-                        <p class="res-desc">{r['description']}</p>
+                    <div class="res-c">
+                        <div class="res-i">{r['icon']}</div>
+                        <div class="res-k">{r['category']}</div>
+                        <div class="res-n">{r['name']}</div>
+                        <p class="res-d">{r['description']}</p>
                     </div>
                     """,
                     unsafe_allow_html=True,
@@ -1334,8 +1306,8 @@ def render_saved(all_df: pd.DataFrame) -> None:
     st.markdown(
         f"""
         <div class="rh">
-            <p class="rh-title"><em>{len(saved)}</em> saved for you</p>
-            <p class="rh-sub">Compare side by side anytime this session</p>
+            <p class="rh-t"><em>{len(saved)}</em> saved for you</p>
+            <p class="rh-s">Compare side by side anytime this session</p>
         </div>
         """,
         unsafe_allow_html=True,
@@ -1348,16 +1320,16 @@ def render_footer(total: int) -> None:
     today = datetime.now().strftime("%B %d, %Y")
     st.markdown(
         f"""
-        <div class="abh-foot">
-            <div class="brand">Atlanta Birth Hub</div>
+        <div class="abh-f">
+            <div class="b">Atlanta Birth Hub</div>
             <p>{total} facilities · CMS Hospital Compare & public transparency sources · Updated {today}</p>
             <p>Estimates are for planning only. Not medical or financial advice.
             Confirm details with your care team and hospital billing office.</p>
-            <div class="foot-pills">
-                <span class="foot-pill">CMS Hospital Compare</span>
-                <span class="foot-pill">Price transparency</span>
-                <span class="foot-pill">Georgia resources</span>
-                <span class="foot-pill">No account required</span>
+            <div class="f-pills">
+                <span class="f-p">CMS Hospital Compare</span>
+                <span class="f-p">Price transparency</span>
+                <span class="f-p">Georgia resources</span>
+                <span class="f-p">No account required</span>
             </div>
         </div>
         """,
@@ -1379,7 +1351,7 @@ def main() -> None:
     render_gentle_note()
 
     st.markdown(
-        '<div class="search-shell"><p class="search-label">Search</p></div>',
+        '<div class="search-box"><p class="search-lbl">Search</p></div>',
         unsafe_allow_html=True,
     )
     st.session_state.search_query = st.text_input(
